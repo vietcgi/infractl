@@ -5,14 +5,41 @@ metadata:
   namespace: argocd
 spec:
   generators:
-    - git:
-        repoURL: https://github.com/vietcgi/infractl.git
-        revision: main
-        directories:
-          - path: apps/system/overlays/prod/*
+    - list:
+        elements:
+          - name: nodelocaldns
+            path: apps/system/overlays/prod/nodelocaldns
+          - name: loki
+            path: apps/system/overlays/prod/loki
+          - name: longhorn
+            path: apps/system/overlays/prod/longhorn
+          - name: prometheus
+            path: apps/system/overlays/prod/prometheus
+          - name: grafana
+            path: apps/system/overlays/prod/grafana
+          - name: nginx-ingress
+            path: apps/system/overlays/prod/nginx-ingress
+          - name: cert-manager
+            path: apps/system/overlays/prod/cert-manager
+          - name: rancher
+            path: apps/system/overlays/prod/rancher
+          - name: argocd
+            path: apps/system/overlays/prod/argocd
+          - name: coredns
+            path: apps/system/overlays/prod/coredns
+          - name: cilium
+            path: apps/system/overlays/prod/cilium
+          - name: alertmanager
+            path: apps/system/overlays/prod/alertmanager
+          - name: sealed-secrets
+            path: apps/system/overlays/prod/sealed-secrets
+          - name: neuvector
+            path: apps/system/overlays/prod/neuvector
+          - name: metrics-server
+            path: apps/system/overlays/prod/metrics-server
   template:
     metadata:
-      name: '{{path.basename}}-system-app'
+      name: '{{name}}-system-app'
     spec:
       project: default
       source:
@@ -23,7 +50,7 @@ spec:
           buildOptions: --enable-helm
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}'
+        namespace: '{{name}}'
       syncPolicy:
         automated:
           prune: true
