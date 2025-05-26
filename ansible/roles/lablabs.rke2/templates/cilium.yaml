@@ -1,8 +1,12 @@
 ---
+# Source: cilium/templates/cilium-namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cilium
+  name: "cilium"
+  labels:
+    app.kubernetes.io/part-of: cilium
+---
 # Source: cilium/templates/cilium-secrets-namespace.yaml
 apiVersion: v1
 kind: Namespace

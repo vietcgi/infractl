@@ -21,7 +21,7 @@ server_type: multipass
 ssh_key: ~/.ssh/kevin.pem
 status:
   deleted: true
-  last_updated: '2025-05-26T07:29:38.417790'
+  last_updated: '2025-05-26T08:01:29.642562'
   provisioned: false
 tags:
   owner: kevin

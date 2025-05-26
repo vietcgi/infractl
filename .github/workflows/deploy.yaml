@@ -1,0 +1,39 @@
+
+name: Deploy Cluster with infractl
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_CONTENT }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Write kubeconfig from GitHub Secret
+        run: |
+          echo "$KUBECONFIG_CONTENT" > /tmp/ci-kubeconfig.yaml
+
+      - name: Run infractl to create cluster
+        run: |
+          source venv/bin/activate
+          python -m infractl.cli cluster create \
+            --name kevin-vu \
+            --kubeconfig /tmp/ci-kubeconfig.yaml
