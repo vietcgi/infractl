@@ -1,7 +1,0 @@
-# Example patch for grafana in prod environment
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: grafana
-  labels:
-    environment: prod

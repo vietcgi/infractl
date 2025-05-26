@@ -1,7 +1,0 @@
-# Example patch for prometheus in prod environment
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: prometheus
-  labels:
-    environment: prod

@@ -1,7 +1,0 @@
-# Example patch for coredns in prod environment
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: coredns
-  labels:
-    environment: prod

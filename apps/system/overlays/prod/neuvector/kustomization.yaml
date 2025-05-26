@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - ../../../base/neuvector
 patchesStrategicMerge:
-  - patch.yaml

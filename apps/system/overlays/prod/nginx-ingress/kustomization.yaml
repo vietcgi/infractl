@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - ../../../base/nginx-ingress
 patchesStrategicMerge:
-  - patch.yaml
