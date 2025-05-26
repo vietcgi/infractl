@@ -1,19 +1,12 @@
-configs:
-  cm:
-    kustomize.buildOptions: --enable-helm
-    
-  secret:
-    
-
 networkPolicy:
   create: true
   allowInternal: true
 
 installCRDs: true
 
-global:
-  image:
-    tag: v2.10.3  # Replace with the latest stable version
+# global:
+#   image:
+#     tag: v2.10.3  # Replace with the latest stable version
 
 controller:
   replicas: 2
