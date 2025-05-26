@@ -39,7 +39,7 @@ def apply_manifest_dict_safe(doc):
 
 # Bootstrap ArgoCD apps using a local manifest
 # - Applies each manifest in apps/system/bootstrap-system-apps.yaml
-def bootstrap_argocd_apps(manifest_path="apps/system/argocd/root-app.yaml"):
+def bootstrap_argocd_apps(manifest_path="apps/argocd/root-app.yaml"):
     print(f"🚀 Bootstrapping ArgoCD apps from {manifest_path}...")
 
     if not os.path.exists(manifest_path):

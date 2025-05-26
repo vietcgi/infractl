@@ -11,7 +11,7 @@ spec:
   generators:
     - git:
         # Git source pointing to this same repo
-        repoURL: https://github.com/your-org/gitops-infra.git
+        repoURL: https://github.com/vietcgi/infractl.git
         revision: main
         directories:
           # 🔍 This will find all folders under overlays/prod/*
@@ -23,7 +23,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/your-org/gitops-infra.git
+        repoURL: https://github.com/vietcgi/infractl.git
         targetRevision: main
         # Each folder found is used as an Application path
         path: '{{path}}'
