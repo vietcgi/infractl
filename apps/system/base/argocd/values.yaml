@@ -1,37 +1,132 @@
 configs:
   cm:
     kustomize.buildOptions: --enable-helm
-
-  rbac:
-    policy.default: role:readonly
     
   secret:
-    argocdServerAdminPassword: $2b$12$oKokPM7N8GEWQALP0J.Hhe6nUdxIo4nItFuGtqlUr3jpld5OkWQn6
+    
 
 networkPolicy:
   create: true
   allowInternal: true
 
-applicationSet:
-  enabled: true
-
 installCRDs: true
 
-server:
-  service:
-    type: ClusterIP
+global:
+  image:
+    tag: v2.10.3  # Replace with the latest stable version
 
 controller:
-  replicas: 1
+  replicas: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  metrics:
+    enabled: true
+  priorityClassName: system-cluster-critical
+
+server:
+  replicas: 2
+  extraArgs:
+    - --insecure  # For internal-only use; remove if using TLS/Ingress
+  service:
+    type: ClusterIP
+    servicePortHttp: 80
+    servicePortHttps: 443
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - argocd.example.com
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    tls:
+      - hosts:
+          - argocd.example.com
+        secretName: argocd-tls
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
 
 repoServer:
-  replicas: 1
+  replicas: 2
+  metrics:
+    enabled: true
+  priorityClassName: system-cluster-critical
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+applicationSet:
+  replicaCount: 1
+  metrics:
+    enabled: true
+  priorityClassName: system-cluster-critical
 
 dex:
-  enabled: true
-
-redis:
-  enabled: true
+  enabled: false  # Disable if using external SSO/OIDC
 
 notifications:
   enabled: true
+  metrics:
+    enabled: true
+
+redis:
+  metrics:
+    enabled: true
+
+configs:
+  params:
+    server.insecure: true
+    applicationsetcontroller.enable.progressive.syncs: "true"
+  cm:
+
+    application.instanceLabelKey: argocd.argoproj.io/instance
+    exec.enabled: "true"
+    kustomize.buildOptions: --enable-helm
+    timeout.reconciliation: 60s
+    resource.exclusions: |
+      - apiGroups:
+          - "metrics.k8s.io"
+        kinds:
+          - "PodMetrics"
+        clusters:
+          - "*"
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      g, admin@example.com, role:admin
+      g, devops@example.com, role:edit
+  secret:
+    argocdServerAdminPassword: $2b$12$oKokPM7N8GEWQALP0J.Hhe6nUdxIo4nItFuGtqlUr3jpld5OkWQn6
+    extra:
+      # external vaults, git-creds, SSO providers, etc.
+      # argocd-secret patching here if needed
+
+prometheus:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+
+nodeSelector:
+  kubernetes.io/os: linux
