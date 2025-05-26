@@ -1,0 +1,5 @@
+apiVersion: v2
+name: addons
+description: Helm chart to manage cross-platform cluster add-ons (RKE2, EKS, etc.)
+version: 0.1.0
+appVersion: "1.0"

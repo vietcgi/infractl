@@ -1,0 +1,16 @@
+name: pre-commit
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+
+    - name: Run pre-commit
+      uses: pre-commit/action@v3.0.1

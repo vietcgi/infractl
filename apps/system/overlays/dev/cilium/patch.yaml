@@ -1,0 +1,7 @@
+# Example patch for cilium in dev environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cilium
+  labels:
+    environment: dev

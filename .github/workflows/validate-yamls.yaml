@@ -1,0 +1,35 @@
+name: Validate YAML and Kubernetes Manifests
+
+on:
+  pull_request:
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+
+jobs:
+  validate-yamls:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: ✅ Install kubeconform
+        run: |
+          curl -L https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: 🔍 Validate Kubernetes YAMLs with kubeconform
+        run: |
+          find . -type f \( -name "*.yaml" -o -name "*.yml" \) -exec kubeconform -strict -verbose -summary {} +
+
+      - name: ✅ Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: 🔄 Dry-run Apply to Catch Invalid Manifests
+        run: |
+          find apps/ -name "*.yaml" -print0 | xargs -0 -n1 kubectl apply --dry-run=client -f
+
+      - name: 🧪 Lint Helm Charts
+        run: |
+          helm repo add stable https://charts.helm.sh/stable || true
+          helm lint $(find apps/system -name Chart.yaml -exec dirname {} \;)

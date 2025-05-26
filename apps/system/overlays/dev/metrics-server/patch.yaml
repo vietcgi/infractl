@@ -1,0 +1,7 @@
+# Example patch for metrics-server in dev environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metrics-server
+  labels:
+    environment: dev

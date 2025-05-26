@@ -1,0 +1,7 @@
+# Example patch for sealed-secrets in prod environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sealed-secrets
+  labels:
+    environment: prod

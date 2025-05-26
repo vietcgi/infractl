@@ -1,0 +1,7 @@
+# Example patch for argocd in prod environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+  labels:
+    environment: prod

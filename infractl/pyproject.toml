@@ -1,0 +1,11 @@
+[project]
+name = "infractl"
+version = "0.1.0"
+description = "Unified CLI for Kubernetes Infra Bootstrap and Diagnosis"
+requires-python = ">=3.7"
+
+[tool.dependencies]
+fastapi = "*"
+uvicorn = "*"
+
+python-dotenv = "*"

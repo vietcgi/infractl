@@ -1,0 +1,25 @@
+name: Secret Scan (gitleaks)
+
+on:
+  pull_request:
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.sh'
+      - '**/*.json'
+
+jobs:
+  scan-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repo
+        uses: actions/checkout@v3
+
+      - name: 🔍 Install gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_$(uname -s)_$(uname -m).tar.gz | tar -xz
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: 🚨 Run gitleaks
+        run: |
+          gitleaks detect --source . --no-git -v

@@ -1,0 +1,14 @@
+name: kevin-vu
+region: us-west
+env: prod
+purpose: development
+type: multipass
+cluster_type: rke2
+server_type: multipass
+ssh_key: ~/.ssh/kevin.pem
+kubeconfig: /kubeconfigs/kevin-vu.yaml
+inventory: ansible/hosts-kevin-vu.ini
+apps:
+  - apps/prod/applicationset.yaml
+tags:
+  owner: kevin

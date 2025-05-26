@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: prod
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  description: Production environment apps
+  destinations:
+  - namespace: prod
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  roles:
+  - description: Ops team controls prod syncs
+    groups:
+    - okta-prod-ops
+    name: ops
+    policies:
+    - p, proj:prod:ops, applications, sync, prod/*, allow
+    - p, proj:prod:ops, applications, get, prod/*, allow
+  sourceRepos:
+  - https://github.com/your-org/apps
+  syncWindows:
+  - applications:
+    - '*'
+    duration: 8h
+    kind: allow
+    schedule: Mon-Fri 09:00-17:00
+    timeZone: America/Los_Angeles

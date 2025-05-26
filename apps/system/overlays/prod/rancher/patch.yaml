@@ -1,0 +1,7 @@
+# Example patch for rancher in prod environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rancher
+  labels:
+    environment: prod

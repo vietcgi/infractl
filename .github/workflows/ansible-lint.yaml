@@ -1,0 +1,24 @@
+name: Ansible Lint Check
+
+on:
+  push:
+    paths:
+      - 'ansible/**.yml'
+  pull_request:
+    paths:
+      - 'ansible/**.yml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install ansible + lint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install ansible ansible-lint
+
+      - name: Run ansible-lint
+        run: ./scripts/lint-ansible.sh

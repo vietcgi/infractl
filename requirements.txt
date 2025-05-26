@@ -1,0 +1,9 @@
+typer==0.15.4
+jsonschema==4.23.0
+pyyaml==6.0.2
+paramiko==3.5.1
+pytest==8.3.5
+requests==2.32.3
+kubernetes==32.0.1
+dotenv
+bcrypt

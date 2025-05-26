@@ -1,0 +1,7 @@
+# Example patch for longhorn in dev environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: longhorn
+  labels:
+    environment: dev

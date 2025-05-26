@@ -1,0 +1,17 @@
+# rke2_version: "v1.33.1+rke2r1"
+# rke2_token: "dev-token-123"
+# rke2_cni: "cilium"
+# rke2_servers:
+#   - https://192.168.64.143:9345
+# rke2_tls_san:
+# - 192.168.64.143
+# rke2_download_kubeconf: true
+rke2_cni: cilium
+rke2_download_kubeconf: true
+rke2_servers:
+- https://192.168.64.143:9345
+rke2_tls_san:
+- 192.168.64.143
+rke2_token: default-token
+rke2_version: v1.33.1+rke2r1
+

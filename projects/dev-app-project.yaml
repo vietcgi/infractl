@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: dev
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  description: Dev environment apps
+  destinations:
+  - namespace: dev
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  roles:
+  - description: Dev team can sync their apps
+    groups:
+    - okta-devops-dev
+    name: developer
+    policies:
+    - p, proj:dev:developer, applications, sync, dev/*, allow
+    - p, proj:dev:developer, applications, get, dev/*, allow
+  sourceRepos:
+  - https://github.com/your-org/apps

@@ -1,0 +1,15 @@
+platform: rke2
+
+sealedSecrets:
+  enabled: false
+
+metricsServer:
+  enabled: false
+
+externalSecrets:
+  enabled: false
+  irsaRoleArn: ""
+
+karpenter:
+  enabled: false
+  irsaRoleArn: ""

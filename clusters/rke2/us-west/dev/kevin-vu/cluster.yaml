@@ -1,0 +1,31 @@
+agents:
+- name: us-west-dev-kevin-vu-worker-0
+apps:
+- apps/dev/applicationset.yaml
+- apps/dev/kevin-vu-custom.yaml
+cluster_api: null
+cluster_type: rke2
+env: dev
+inventory: ansible/hosts-us-west-dev-kevin-vu.ini
+kubeconfig: ~/.kube/rke2-us-west-dev-kevin-vu.yaml
+kubernetes_version: v1.33.1+rke2r1
+masters:
+- name: us-west-dev-kevin-vu-master-0
+name: kevin-vu
+os: '24.04'
+platform: rke2
+provisioner: ansible
+purpose: development
+region: us-west
+server_type: multipass
+ssh_key: ~/.ssh/kevin.pem
+status:
+  deleted: true
+  last_updated: '2025-05-25T22:31:23.735775'
+  provisioned: false
+tags:
+  owner: kevin
+  team: devops
+  tier: dev-cluster
+  zone: home-lab
+type: multipass

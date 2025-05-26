@@ -1,0 +1,7 @@
+# Example patch for nodelocaldns in dev environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nodelocaldns
+  labels:
+    environment: dev

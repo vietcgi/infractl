@@ -1,0 +1,36 @@
+# 🔁 ArgoCD ApplicationSet
+# This file is automatically picked up by root-app.yaml
+# It dynamically discovers and deploys one Application per system app in overlays/prod/*
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: system-apps
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        # Git source pointing to this same repo
+        repoURL: https://github.com/your-org/gitops-infra.git
+        revision: main
+        directories:
+          # 🔍 This will find all folders under overlays/prod/*
+          - path: apps/system/overlays/prod/*
+  template:
+    metadata:
+      # App name will be based on the folder name
+      name: '{{path.basename}}-system-app'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/your-org/gitops-infra.git
+        targetRevision: main
+        # Each folder found is used as an Application path
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'  # Match namespace to app name
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

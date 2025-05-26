@@ -1,0 +1,27 @@
+apiVersion: v1
+data:
+  policy.csv: '# Admins: full access
+
+    g, argocd-admins, role:admin
+
+
+    # Viewers: read-only
+
+    g, argocd-viewers, role:readonly
+
+
+    # Deployers: limited to sync and read
+
+    p, role:deployer, applications, get, */*, allow
+
+    p, role:deployer, applications, sync, */*, allow
+
+    g, argocd-deployers, role:deployer
+
+    '
+  policy.default: role:readonly
+  scopes: '[groups]'
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd

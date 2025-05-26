@@ -1,0 +1,12 @@
+name: dev
+os: "24.04"
+kubernetes_version: "v1.33.1+rke2r1"
+cni: "cilium"
+token: "dev-token-123"
+
+masters:
+  - name: k-master1
+    mode: multipass
+workers:
+  - name: k-worker1
+    mode: multipass

@@ -1,0 +1,21 @@
+{{- if and (eq .Values.platform "eks") .Values.karpenter.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karpenter
+  namespace: karpenter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: karpenter
+  template:
+    metadata:
+      labels:
+        app: karpenter
+    spec:
+      serviceAccountName: karpenter
+      containers:
+        - name: karpenter
+          image: public.ecr.aws/karpenter/karpenter:v0.20.0
+{{- end }}

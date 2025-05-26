@@ -1,0 +1,5 @@
+- name: Bootstrap RKE2 Cluster
+  hosts: k8s_cluster
+  become: true
+  roles:
+    - lablabs.rke2
