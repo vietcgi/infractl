@@ -29,7 +29,7 @@ def provision(config: dict, refresh_only: bool = False):
                     "multipass", "launch", os_version,
                     "--name", vm_name,
                     "--cpus", "2",
-                    "--memory", "6G",
+                    "--memory", "4G",
                     "--disk", "30G"
                 ], check=True)
                 print(f"✅ Launched: {vm_name}")

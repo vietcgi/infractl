@@ -1,24 +1,26 @@
-
 import os
-import time
+import subprocess
 import logging
-import bcrypt
-from dotenv import load_dotenv
+import yaml
+
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from kubernetes.dynamic import DynamicClient
-import yaml
 
-# Safely apply a Kubernetes manifest dict using DynamicClient
-# - Handles missing metadata and avoids duplicate error spam
-def apply_manifest_dict_safe(doc):
+logging.basicConfig(level=logging.INFO)
+
+def apply_manifest_dict_safe(doc: dict, default_namespace: str = "argocd") -> None:
+    """
+    Safely apply a Kubernetes manifest using the dynamic client.
+    Falls back to default namespace if not specified in the manifest.
+    """
     if not doc or not doc.get("kind") or not doc.get("apiVersion"):
         return
 
     if not doc.get("metadata"):
         doc["metadata"] = {}
     if not doc["metadata"].get("namespace"):
-        doc["metadata"]["namespace"] = "argocd"
+        doc["metadata"]["namespace"] = default_namespace
 
     k8s_client = client.ApiClient()
     dyn_client = DynamicClient(k8s_client)
@@ -32,18 +34,18 @@ def apply_manifest_dict_safe(doc):
         resource.create(body=doc, namespace=namespace, _preload_content=False)
         logging.info(f"✅ Applied: {doc['kind']} {doc['metadata'].get('name')} in {namespace}")
     except ApiException as e:
-        if e.status == 409 or "kubectl.kubernetes.io/last-applied-configuration" in str(e.body):
+        if e.status == 409 or "already exists" in str(e.body):
+            logging.info(f"ℹ️ Skipped existing: {doc['kind']} {doc['metadata'].get('name')}")
             return
         logging.error(f"❌ Failed to apply {doc['kind']}: {e}")
         raise
 
-# Bootstrap ArgoCD apps using a local manifest
-# - Applies each manifest in apps/system/bootstrap-system-apps.yaml
-def bootstrap_argocd_apps(manifest_path="apps/argocd/root-app.yaml"):
-    print(f"🚀 Bootstrapping ArgoCD apps from {manifest_path}...")
-
+def bootstrap_argocd_apps(manifest_path: str = "apps/argocd/root-app.yaml") -> None:
+    """
+    Bootstrap ArgoCD applications by applying a root AppSet or manifest.
+    """
     if not os.path.exists(manifest_path):
-        print(f"⚠️ ArgoCD bootstrap file not found: {manifest_path}")
+        logging.warning(f"⚠️ ArgoCD manifest not found at: {manifest_path}")
         return
 
     with open(manifest_path, "r") as f:
@@ -53,81 +55,76 @@ def bootstrap_argocd_apps(manifest_path="apps/argocd/root-app.yaml"):
         try:
             apply_manifest_dict_safe(doc)
         except Exception as e:
-            print(f"❌ Failed to apply ArgoCD app: {e}")
-    print("✅ ArgoCD apps bootstrapped.")
+            logging.error(f"❌ Failed to apply manifest: {e}")
+    logging.info("✅ ArgoCD apps bootstrapped.")
 
-# Install ArgoCD using native K8s SDK
-# - Sets bcrypt password from .env
-# - Creates or patches argocd-secret
-# - Deletes argocd-initial-admin-secret
-# - Applies official ArgoCD manifest
-# - Bootstraps system apps
-def install_argocd_from_addons():
-    print("📦 Installing ArgoCD and setting initial admin password (bcrypt)...")
+def bootstrap_coredns(values_path: str = "apps/system/base/coredns/values.yaml") -> None:
+    """
+    Install CoreDNS using Helm with the provided values file.
+    """
+    if not os.path.exists(values_path):
+        logging.warning(f"⚠️ CoreDNS values.yaml not found at {values_path}")
+        return
+
+    helm_cmd = [
+        "helm", "upgrade", "--install", "coredns", "coredns/coredns",
+        "--namespace", "kube-system",
+        "-f", values_path,
+        "--create-namespace"
+    ]
+    logging.info("🚀 Installing CoreDNS via Helm...")
+    try:
+        subprocess.run(helm_cmd, check=True)
+        logging.info("✅ CoreDNS installed successfully.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"❌ CoreDNS installation failed: {e}")
+
+def bootstrap_gitops_stack() -> None:
+    """
+    Bootstrap the GitOps foundation:
+    - Install CoreDNS (manual bootstrap)
+    - Install ArgoCD via Helm
+    - Apply ArgoCD root app manifest
+    """
+    logging.info("📦 Bootstrapping GitOps stack...")
 
     try:
         config.load_kube_config()
-        core_v1 = client.CoreV1Api()
-        namespace = "argocd"
-        secret_name = "argocd-secret"
+    except Exception:
+        config.load_incluster_config()
 
-        # Ensure namespace
-        ns = client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace))
-        try:
-            core_v1.create_namespace(ns)
-            print(f"✅ Created namespace: {namespace}")
-        except ApiException as e:
-            if e.status != 409:
-                raise
-            print(f"ℹ️ Namespace '{namespace}' already exists.")
+    core_v1 = client.CoreV1Api()
+    namespace = "argocd"
 
-        # Load .env password and hash
-        load_dotenv()
-        password = os.getenv("ARGOCD_ADMIN_PASSWORD", "admin123")
-        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    # Ensure ArgoCD namespace exists
+    ns = client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace))
+    try:
+        core_v1.create_namespace(ns)
+        logging.info(f"✅ Created namespace: {namespace}")
+    except ApiException as e:
+        if e.status != 409:
+            raise
+        logging.info(f"ℹ️ Namespace '{namespace}' already exists.")
 
-        # Create or patch secret
-        try:
-            core_v1.create_namespaced_secret(
-                namespace=namespace,
-                body=client.V1Secret(
-                    metadata=client.V1ObjectMeta(name=secret_name),
-                    type="Opaque",
-                    string_data={"admin.password": hashed_password}
-                )
-            )
-            print("✅ Created argocd-secret with bcrypt password.")
-        except ApiException as e:
-            if e.status == 409:
-                patch_body = {"stringData": {"admin.password": hashed_password}}
-                core_v1.patch_namespaced_secret(secret_name, namespace, patch_body)
-                print("✅ Patched existing argocd-secret with bcrypt password.")
-            else:
-                raise
+    # Step 1: Bootstrap CoreDNS first (needed for GitOps DNS resolution)
+    bootstrap_coredns()
 
-        # Delete auto-generated secret
-        try:
-            core_v1.delete_namespaced_secret("argocd-initial-admin-secret", namespace)
-            print("🧼 Deleted argocd-initial-admin-secret.")
-        except ApiException as e:
-            if e.status != 404:
-                raise
-            print("ℹ️ argocd-initial-admin-secret not present.")
+    # Step 2: Install ArgoCD via Helm
+    logging.info("🚀 Installing ArgoCD via Helm...")
+    subprocess.run(["helm", "repo", "add", "argo", "https://argoproj.github.io/argo-helm"], check=True)
+    subprocess.run(["helm", "repo", "update"], check=True)
+    subprocess.run([
+        "helm", "upgrade", "--install", "argocd", "argo/argo-cd",
+        "--namespace", namespace, "--create-namespace",
+        "-f", "apps/system/base/argocd/values.yaml"
+    ], check=True)
+    logging.info("✅ ArgoCD installed successfully.")
 
-        # Install Argo CD
-        import subprocess
-        subprocess.run([
-            "kubectl", "apply", "-n", namespace,
-            "-f", "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
-        ], check=True)
+    # Step 3: Apply ArgoCD root AppSet
+    bootstrap_argocd_apps()
 
-        print("✅ ArgoCD installed and configured with bcrypt password.")
-        bootstrap_argocd_apps()
+    logging.info("🎉 GitOps bootstrap complete.")
 
-    except Exception as e:
-        print(f"❌ Failed to install ArgoCD: {e}")
-
-# --- GitOps tools below ---
 
 def install_fleet():
     print("📦 Installing Fleet GitOps...")

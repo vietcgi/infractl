@@ -4,6 +4,9 @@ configs:
 
   rbac:
     policy.default: role:readonly
+    
+  secret:
+    argocdServerAdminPassword: $2b$12$oKokPM7N8GEWQALP0J.Hhe6nUdxIo4nItFuGtqlUr3jpld5OkWQn6
 
 networkPolicy:
   create: true
