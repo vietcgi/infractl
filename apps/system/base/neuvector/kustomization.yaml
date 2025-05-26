@@ -6,7 +6,7 @@ kind: Kustomization
 helmCharts:
   - name: core
     repo: https://neuvector.github.io/neuvector-helm/
-    version: 2.6.6
+    version: 2.8.6
     releaseName: neuvector
     namespace: neuvector
     valuesFile: values.yaml

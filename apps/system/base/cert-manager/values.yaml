@@ -1,4 +1,48 @@
-installCRDs: true
+installCRDs: true  # Required if you're installing via Helm and not managing CRDs separately
+
+replicaCount: 2  # HA deployment across nodes
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+
+webhook:
+  timeoutSeconds: 5
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    additionalLabels:
+      release: prometheus
+
+# Disable default ingress-shim to use your own ClusterIssuers
 ingressShim:
-  defaultIssuerName: letsencrypt-prod
-  defaultIssuerKind: ClusterIssuer
+  defaultIssuerKind: ""
+  defaultIssuerName: ""
+
+# Optional: adjust controller args for DNS challenge providers or extended logs
+extraArgs:
+  - --enable-certificate-owner-ref=true
+  - --cluster-resource-namespace=cert-manager
+
+priorityClassName: system-cluster-critical

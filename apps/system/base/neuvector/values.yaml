@@ -1,5 +1,85 @@
 controller:
-  replicas: 1
-cve:
-  scanner:
-    replicas: 1
+  replicas: 2
+  priorityClassName: system-cluster-critical
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+  nodeSelector:
+    kubernetes.io/os: linux
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+enforcer:
+  replicas: 1  # One per node (auto-managed as DaemonSet)
+  tolerations:
+    - operator: Exists
+  nodeSelector:
+    kubernetes.io/os: linux
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+manager:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    host: neuvector.example.com
+    tls: true
+    secretName: neuvector-tls  # Use cert-manager or manually created secret
+
+  replicas: 2
+  tolerations:
+    - operator: Exists
+  nodeSelector:
+    kubernetes.io/os: linux
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 512Mi
+
+  service:
+    type: ClusterIP
+    ports:
+      https: 8443
+
+registry:
+  enabled: true
+  registry: docker.io
+  tag: latest
+  imagePullPolicy: IfNotPresent
+
+crd:
+  install: true
+
+prometheus:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+global:
+  cattle:
+    systemDefaultRegistry: ""  # Fill this if using a private registry
+
+customSecurityPolicy:
+  enabled: true  # Enables strict default network policy + baseline rules
+
+webhook:
+  enabled: true  # Enables K8s admission webhook for runtime enforcement

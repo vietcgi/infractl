@@ -1,2 +1,25 @@
-crd:
-  create: true
+fullnameOverride: sealed-secrets-controller
+
+replicaCount: 2  # For HA: requires shared secret key setup (see note below)
+
+priorityClassName: system-cluster-critical
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+rbac:
+  creat
