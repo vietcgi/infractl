@@ -100,6 +100,16 @@ def bootstrap_gitops_stack(kubeconfig_path: str = "~/.kube/config") -> None:
     logging.info("✅ ArgoCD installed successfully.")
 
     bootstrap_argocd_apps()
+    
+    # Apply ArgoCD NetworkPolicy from GitOps folder
+    network_policy_path = "apps/system/base/argocd/networkpolicy.yaml"
+
+    try:
+        subprocess.run(["kubectl", "apply", "-f", network_policy_path], check=True)
+        logging.info("✅ Applied ArgoCD network policy from GitOps repo.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"❌ Failed to apply ArgoCD network policy: {e}")
+
     logging.info("🎉 GitOps bootstrap complete.")
 
 def install_helm_chart(name, repo, chart, namespace):

@@ -24,7 +24,8 @@ tolerations:
 
 servers:
   - zones:
-      - "."
+      - zone: "."
+        scheme: "dns"
     port: 53
     plugins:
       - name: errors
@@ -44,3 +45,17 @@ servers:
       - name: loop
       - name: reload
       - name: loadbalance
+
+service:
+  type: ClusterIP
+  ports:
+    - name: dns
+      port: 53
+      targetPort: 53
+      protocol: UDP
+      scheme: "dns"
+    - name: dns-tcp
+      port: 53
+      targetPort: 53
+      protocol: TCP
+      scheme: "dns"

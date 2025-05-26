@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cilium
+  name: kube-system
   labels:
     name: cilium
 ---
