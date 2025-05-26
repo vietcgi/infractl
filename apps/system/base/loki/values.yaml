@@ -1,1 +1,4 @@
-# Customize Helm chart values for loki
+loki:
+  auth_enabled: false
+ingress:
+  enabled: false

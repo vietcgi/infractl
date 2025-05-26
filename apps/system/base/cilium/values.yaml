@@ -1,1 +1,3 @@
-# Customize Helm chart values for cilium
+kubeProxyReplacement: strict
+k8sServiceHost: ""
+k8sServicePort: 6443

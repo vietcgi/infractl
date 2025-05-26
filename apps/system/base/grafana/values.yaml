@@ -1,1 +1,5 @@
-# Customize Helm chart values for grafana
+adminPassword: admin123
+service:
+  type: ClusterIP
+ingress:
+  enabled: false

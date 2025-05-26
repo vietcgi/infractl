@@ -1,1 +1,4 @@
-# Customize Helm chart values for cert-manager
+installCRDs: true
+ingressShim:
+  defaultIssuerName: letsencrypt-prod
+  defaultIssuerKind: ClusterIssuer

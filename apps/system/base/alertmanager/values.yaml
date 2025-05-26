@@ -1,1 +1,3 @@
-# Customize Helm chart values for alertmanager
+config:
+  global:
+    resolve_timeout: 5m

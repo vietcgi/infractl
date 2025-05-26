@@ -1,1 +1,34 @@
-# Customize Helm chart values for argocd
+configs:
+  cm:
+    kustomize.buildOptions: --enable-helm
+
+  rbac:
+    policy.default: role:readonly
+
+networkPolicy:
+  create: true
+  allowInternal: true
+
+applicationSet:
+  enabled: true
+
+installCRDs: true
+
+server:
+  service:
+    type: ClusterIP
+
+controller:
+  replicas: 1
+
+repoServer:
+  replicas: 1
+
+dex:
+  enabled: true
+
+redis:
+  enabled: true
+
+notifications:
+  enabled: true

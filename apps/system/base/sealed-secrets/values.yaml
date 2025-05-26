@@ -1,1 +1,2 @@
-# Customize Helm chart values for sealed-secrets
+crd:
+  create: true

@@ -1,1 +1,6 @@
-# Customize Helm chart values for longhorn
+defaultSettings:
+  defaultDataPath: /var/lib/longhorn
+  createDefaultDiskLabeledNodes: true
+  defaultReplicaCount: 3
+ingress:
+  enabled: false
