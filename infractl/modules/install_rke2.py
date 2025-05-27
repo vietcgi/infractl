@@ -122,4 +122,6 @@ def install(
 
     elif not skip_argocd:
         print("⚙️  Installing ArgoCD...")
-        addons.bootstrap_gitops_stack(kubeconfig_path=str(local_kubeconfig))
+        # addons.bootstrap_gitops_stack(kubeconfig_path=str(local_kubeconfig))
+        addons.bootstrap_gitops_stack(env=env, region=region, name=name)
+

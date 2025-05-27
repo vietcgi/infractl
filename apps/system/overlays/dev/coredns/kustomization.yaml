@@ -1,6 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+namespace: kube-system
+
 resources:
-  - ../../../base/coredns
-patchesStrategicMerge:
-  - patch.yaml
+  - ../../base/coredns 
+
+patches:
+  - path: patch.yaml
+    target:
+      kind: Deployment
+      name: coredns

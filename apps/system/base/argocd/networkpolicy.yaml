@@ -1,12 +1,21 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-argocd-internal-traffic
+  name: argocd-allow-only-from-ingress
   namespace: argocd
 spec:
-  podSelector: {}
-  ingress:
-    - from:
-        - podSelector: {}
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-server
   policyTypes:
     - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0

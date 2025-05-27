@@ -1,135 +1,132 @@
 import os
+import shutil
 import subprocess
 import logging
-import yaml
-
+from pathlib import Path
+from typing import List
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from kubernetes.dynamic import DynamicClient
 
-logging.basicConfig(level=logging.INFO)
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-def apply_manifest_dict_safe(doc: dict, default_namespace: str = "argocd") -> None:
-    if not doc or not doc.get("kind") or not doc.get("apiVersion"):
-        return
+# Constants
+CLUSTER_ROOT = Path("clusters")
+ARGOCD_SRC = Path("apps/argocd")
 
-    if not doc.get("metadata"):
-        doc["metadata"] = {}
-    if not doc["metadata"].get("namespace"):
-        doc["metadata"]["namespace"] = default_namespace
 
-    k8s_client = client.ApiClient()
-    dyn_client = DynamicClient(k8s_client)
-
+def run_command(cmd: List[str]):
     try:
-        resource = dyn_client.resources.get(api_version=doc["apiVersion"], kind=doc["kind"])
-        namespace = doc["metadata"]["namespace"]
-        resource.create(body=doc, namespace=namespace, _preload_content=False)
-        logging.info(f"✅ Applied: {doc['kind']} {doc['metadata'].get('name')} in {namespace}")
-    except ApiException as e:
-        if e.status == 409 or "already exists" in str(e.body):
-            logging.info(f"ℹ️ Skipped existing: {doc['kind']} {doc['metadata'].get('name')}")
-        else:
-            logging.error(f"❌ Failed to apply {doc['kind']}: {e}")
-            raise
-
-def bootstrap_argocd_apps(manifest_path: str = "apps/argocd/root-app.yaml") -> None:
-    if not os.path.exists(manifest_path):
-        logging.warning(f"⚠️ ArgoCD manifest not found at: {manifest_path}")
-        return
-
-    with open(manifest_path, "r") as f:
-        docs = list(yaml.safe_load_all(f))
-
-    for doc in docs:
-        try:
-            apply_manifest_dict_safe(doc)
-        except Exception as e:
-            logging.error(f"❌ Failed to apply manifest: {e}")
-    logging.info("✅ ArgoCD apps bootstrapped.")
-
-def bootstrap_coredns(values_path: str = "apps/system/base/coredns/values.yaml") -> None:
-    if not os.path.exists(values_path):
-        logging.warning(f"⚠️ CoreDNS values.yaml not found at {values_path}")
-        return
-
-    helm_cmd = [
-        "helm", "upgrade", "--install", "coredns", "coredns/coredns",
-        "--namespace", "kube-system", "-f", values_path,
-        "--create-namespace", "--wait", "--timeout", "120s"
-    ]
-    logging.info("🚀 Installing CoreDNS via Helm...")
-    try:
-        subprocess.run(helm_cmd, check=True)
-        logging.info("✅ CoreDNS installed successfully.")
+        logging.debug(f"Running command: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as e:
-        logging.error(f"❌ CoreDNS installation failed: {e}")
+        logging.error(f"❌ Command failed: {' '.join(cmd)}\n{e}")
+        raise
+
+
+def apply_kustomize(path: str):
+    if not os.path.isdir(path):
+        logging.error(f"❌ Kustomize path not found: {path}")
+        raise FileNotFoundError(f"Kustomize path not found: {path}")
+    logging.info(f"📦 Applying Kustomize directory: {path}")
+    run_command(["kubectl", "apply", "-k", path])
+
+
+def apply_manifest(path: Path):
+    if not path.exists():
+        raise FileNotFoundError(f"❌ Manifest file not found: {path}")
+    logging.info(f"📦 Applying manifest: {path}")
+    run_command(["kubectl", "apply", "-f", str(path)])
+
 
 def create_namespace_if_missing(namespace: str):
-    core_v1 = client.CoreV1Api()
-    ns = client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace))
     try:
-        core_v1.create_namespace(ns)
+        client.CoreV1Api().create_namespace(client.V1Namespace(metadata=client.V1ObjectMeta(name=namespace)))
         logging.info(f"✅ Created namespace: {namespace}")
     except ApiException as e:
         if e.status != 409:
             raise
         logging.info(f"ℹ️ Namespace '{namespace}' already exists.")
 
-def bootstrap_gitops_stack(kubeconfig_path: str = "~/.kube/config") -> None:
-    logging.info("📦 Bootstrapping GitOps stack...")
-    kubeconfig_path = os.path.expanduser(kubeconfig_path)
 
-    if not os.path.exists(kubeconfig_path):
-        raise FileNotFoundError(f"❌ Kubeconfig file not found: {kubeconfig_path}")
+def install_helm_chart(name: str, repo: str, chart: str, namespace: str, values_file: str = None):
+    logging.info(f"🚀 Installing Helm chart: {chart} in namespace {namespace}")
+    run_command(["helm", "repo", "add", name, repo])
+    run_command(["helm", "repo", "update"])
 
-    config.load_kube_config(config_file=kubeconfig_path)
-
-    create_namespace_if_missing("argocd")
-    bootstrap_coredns()
-
-    logging.info("🚀 Installing ArgoCD via Helm...")
-    subprocess.run(["helm", "repo", "add", "argo", "https://argoproj.github.io/argo-helm"], check=True)
-    subprocess.run(["helm", "repo", "update"], check=True)
-    subprocess.run([
-        "helm", "upgrade", "--install", "argocd", "argo/argo-cd",
-        "--namespace", "argocd", "--create-namespace",
-        "-f", "apps/system/base/argocd/values.yaml",
-        "--wait", "--timeout", "300s"
-    ], check=True)
-    logging.info("✅ ArgoCD installed successfully.")
-
-    bootstrap_argocd_apps()
-    
-    # Apply ArgoCD NetworkPolicy from GitOps folder
-    network_policy_path = "apps/system/base/argocd/networkpolicy.yaml"
-
-    try:
-        subprocess.run(["kubectl", "apply", "-f", network_policy_path], check=True)
-        logging.info("✅ Applied ArgoCD network policy from GitOps repo.")
-    except subprocess.CalledProcessError as e:
-        logging.error(f"❌ Failed to apply ArgoCD network policy: {e}")
-
-    logging.info("🎉 GitOps bootstrap complete.")
-
-def install_helm_chart(name, repo, chart, namespace):
-    subprocess.run(["helm", "repo", "add", name, repo], check=True)
-    subprocess.run(["helm", "repo", "update"], check=True)
-    subprocess.run([
+    cmd = [
         "helm", "upgrade", "--install", name, chart,
-        "-n", namespace, "--create-namespace", "--wait"
-    ], check=True)
+        "--namespace", namespace, "--create-namespace",
+        "--wait", "--timeout", "300s"
+    ]
 
-def install_fleet():
-    logging.info("📦 Installing Fleet GitOps...")
-    config.load_kube_config()
-    create_namespace_if_missing("cattle-fleet-system")
-    install_helm_chart("fleet", "https://rancher.github.io/fleet-helm-charts", "fleet/fleet", "cattle-fleet-system")
-    logging.info("✅ Fleet installation completed.")
+    if values_file:
+        if not os.path.exists(values_file):
+            raise FileNotFoundError(f"❌ Helm values file not found: {values_file}")
+        cmd += ["-f", values_file]
+
+    run_command(cmd)
+    logging.info(f"✅ Helm release '{name}' installed.")
+
 
 def install_flux():
-    logging.info("📦 Installing FluxCD GitOps...")
     config.load_kube_config()
     create_namespace_if_missing("flux-system")
     install_helm_chart("fluxcd", "https://fluxcd-community.github.io/helm-charts", "fluxcd/flux2", "flux-system")
-    logging.info("✅ FluxCD installation completed.")
+
+
+def install_fleet():
+    config.load_kube_config()
+    create_namespace_if_missing("cattle-fleet-system")
+    install_helm_chart("fleet", "https://rancher.github.io/fleet-helm-charts", "fleet/fleet", "cattle-fleet-system")
+
+
+def install_argocd():
+    config.load_kube_config()
+    create_namespace_if_missing("argocd")
+    install_helm_chart(
+        name="argocd",
+        repo="https://argoproj.github.io/argo-helm",
+        chart="argo/argo-cd",
+        namespace="argocd",
+        values_file="apps/system/base/argocd/values.yaml"
+    )
+
+
+def scaffold_cluster(env: str, region: str, name: str, platform: str = "rke2") -> Path:
+    cluster_dir = CLUSTER_ROOT / platform / region / env / name
+    cluster_dir.mkdir(parents=True, exist_ok=True)
+
+    root_app_src = ARGOCD_SRC / "root-app.yaml"
+    appset_src = ARGOCD_SRC / f"system-applicationset-{env}.yaml"
+
+    if not appset_src.exists():
+        raise FileNotFoundError(f"❌ Missing ApplicationSet for {env}: {appset_src}")
+
+    shutil.copy(root_app_src, cluster_dir / "root-app.yaml")
+    shutil.copy(appset_src, cluster_dir / "system-applicationset.yaml")
+    logging.info(f"✅ Cluster scaffolded at: {cluster_dir}")
+
+    return cluster_dir
+
+
+def apply_network_policy():
+    network_policy_path = Path("apps/system/base/argocd/networkpolicy.yaml")
+    if network_policy_path.exists():
+        apply_manifest(network_policy_path)
+    else:
+        logging.warning("⚠️ ArgoCD network policy not found.")
+
+
+def bootstrap_gitops_stack(env: str, region: str, name: str, platform: str = "rke2"):
+    logging.info(f"🚀 Bootstrapping GitOps stack for cluster: {name} ({platform}/{region}/{env})")
+    config.load_kube_config()
+
+    cluster_dir = scaffold_cluster(env, region, name, platform)
+    apply_manifest("apps/system/base/coredns/coredns.yaml")
+    install_argocd()
+    apply_manifest(cluster_dir / "root-app.yaml")
+    apply_network_policy()
+
+    logging.info("🎉 GitOps bootstrap complete.")

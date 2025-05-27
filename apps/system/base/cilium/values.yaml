@@ -1,9 +1,74 @@
+# autoscaling for agent
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2Gi"
+
+# enable all features needed for large clusters
+enableHubble: false
+enableEndpointRoutes: false
 kubeProxyReplacement: true
-k8sServiceHost: 127.0.0.1
-k8sServicePort: 6443
-hubble:
+hostServices:
   enabled: true
-  relay:
+externalIPs:
+  enabled: true
+
+# high connection tracking & BPF map sizes
+bpf:
+  mapDynamicSizeRatio: 0.005
+  policyMapMax: 65536
+  lbMapMax: 131072
+  lbSourceRangeCheck: true
+
+# identity scalability
+identityAllocationMode: crd
+identityChangeGracePeriod: "30s"
+cgroup:
+  autoMount:
+    enabled: false
+
+# ipam & routing
+ipam:
+  mode: cluster-pool
+  clusterPoolIPv4PodCIDR: 10.0.0.0/8
+  clusterPoolIPv4MaskSize: 20
+
+# performance tuning
+monitor:
+  aggregation:
+    level: medium
+    interval: 5s
+    flags: all
+  dropNotification: true
+
+# DNS acceleration
+dnsProxy:
+  enable: true
+  matchPattern: "*"
+  matchName: ".*"
+
+# datapath
+tunnelProtocol: vxlan
+autoDirectNodeRoutes: false
+enableNodePort: true
+nodePort:
+  acceleration: native
+  bindProtection: true
+
+# health & metrics
+operator:
+  prometheus:
     enabled: true
-  ui:
-    enabled: true
+hubble:
+  metrics:
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - icmp
+
+# general settings
+rollOutCiliumPods: true
