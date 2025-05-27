@@ -42,7 +42,7 @@ spec:
       project: default
       source:
         repoURL: https://github.com/vietcgi/infractl.git
-        targetRevision: main
+        targetRevision: dev
         path: apps/system/overlays/dev/{{name}}
         kustomize:
           buildOptions: --enable-helm
