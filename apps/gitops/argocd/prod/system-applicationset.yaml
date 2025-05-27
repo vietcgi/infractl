@@ -3,26 +3,45 @@ kind: ApplicationSet
 metadata:
   name: system-apps-prod
   namespace: argocd
+  labels:
+    environment: prod
+    type: system
 spec:
   generators:
     - list:
         elements:
           - name: cilium
+            namespace: kube-system
           - name: coredns
+            namespace: kube-system
           - name: prometheus
+            namespace: monitoring
           - name: argocd
+            namespace: argocd
           - name: loki
+            namespace: monitoring
           - name: grafana
+            namespace: monitoring
           - name: nginx-ingress
+            namespace: ingress-nginx
           - name: cert-manager
+            namespace: cert-manager
           - name: rancher
+            namespace: cattle-system
           - name: alertmanager
+            namespace: monitoring
           - name: sealed-secrets
+            namespace: kube-system
           - name: metrics-server
+            namespace: kube-system
           - name: neuvector
+            namespace: neuvector
   template:
     metadata:
       name: '{{name}}-prod'
+      labels:
+        app: '{{name}}'
+        environment: prod
     spec:
       project: default
       source:
@@ -33,8 +52,12 @@ spec:
           buildOptions: --enable-helm
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{name}}'
+        namespace: '{{namespace}}'
       syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - ApplyOutOfSyncOnly=true
+          - Validate=true
         automated:
           prune: true
           selfHeal: true
