@@ -29,7 +29,8 @@ resources:
 
 auditLog:
   level: 1
-  destination: /var/log/auditlog/rancher-api-audit.log
+  destination: hostPath
+  hostPath: /var/log/auditlog/rancher-api-audit.log
   maxAge: 10
   maxBackups: 5
   maxSize: 100

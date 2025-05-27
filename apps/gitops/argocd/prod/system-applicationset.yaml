@@ -36,6 +36,8 @@ spec:
             namespace: kube-system
           - name: neuvector
             namespace: neuvector
+          - name: longhorn
+            namespace: longhorn-system
   template:
     metadata:
       name: '{{name}}-prod'
