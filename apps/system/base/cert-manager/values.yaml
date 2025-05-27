@@ -1,6 +1,6 @@
-installCRDs: true  # Required if you're installing via Helm and not managing CRDs separately
+installCRDs: true  # Recommended for Helm-based installations
 
-replicaCount: 2  # HA deployment across nodes
+replicaCount: 2  # High availability
 
 resources:
   requests:
@@ -32,17 +32,11 @@ prometheus:
     enabled: true
     interval: 30s
     scrapeTimeout: 10s
-    additionalLabels:
-      release: prometheus
 
-# Disable default ingress-shim to use your own ClusterIssuers
 ingressShim:
   defaultIssuerKind: ""
   defaultIssuerName: ""
 
-# Optional: adjust controller args for DNS challenge providers or extended logs
 extraArgs:
   - --enable-certificate-owner-ref=true
   - --cluster-resource-namespace=cert-manager
-
-priorityClassName: system-cluster-critical
