@@ -7,8 +7,8 @@ spec:
   project: default
   source:
     repoURL: https://github.com/vietcgi/infractl.git
-    targetRevision: main
-    path: apps/argocd/dev
+    targetRevision: dev
+    path: apps/gitops/argocd/dev
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
