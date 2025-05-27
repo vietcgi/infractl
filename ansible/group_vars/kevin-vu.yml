@@ -1,0 +1,15 @@
+rke2_cni: []
+rke2_custom_manifests:
+- cilium.yaml
+rke2_disable:
+- rke2-canal
+- rke2-coredns
+- rke2-ingress-nginx
+- rke2-metrics-server
+rke2_download_kubeconf: true
+rke2_servers:
+- https://192.168.64.217:9345
+rke2_tls_san:
+- 192.168.64.217
+rke2_token: default-token
+rke2_version: v1.33.1+rke2r1

@@ -4,5 +4,4 @@ kind: Kustomization
 namespace: kube-system
 
 resources:
-  - namespace.yaml
   - coredns.yaml

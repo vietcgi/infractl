@@ -1,4 +1,4 @@
-replicas: 2  # High availability
+replicas: 2
 
 resources:
   requests:
@@ -11,14 +11,36 @@ resources:
 args:
   - --cert-dir=/tmp
   - --secure-port=4443
+  - --kubelet-insecure-tls  # Required for RKE2/K3s
   - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
   - --kubelet-use-node-status-port
   - --metric-resolution=15s
-  - --kubelet-insecure-tls  # Required for most RKE2/K3s or when TLS isn't properly signed
 
 service:
   port: 443
   type: ClusterIP
+
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /livez
+    port: 4443
+    scheme: HTTPS
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /readyz
+    port: 4443
+    scheme: HTTPS
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 3
 
 metrics:
   enabled: true
@@ -27,7 +49,7 @@ metrics:
     interval: 30s
     scrapeTimeout: 10s
     additionalLabels:
-      release: prometheus  # Match Prometheus selector
+      release: prometheus
 
 nodeSelector:
   "kubernetes.io/os": linux

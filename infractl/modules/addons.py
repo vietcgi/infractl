@@ -36,8 +36,14 @@ def apply_kustomize(path: str):
 def apply_manifest(path: Path):
     if not path.exists():
         raise FileNotFoundError(f"❌ Manifest file not found: {path}")
-    logging.info(f"📦 Applying manifest: {path}")
-    run_command(["kubectl", "apply", "-f", str(path)])
+
+    if path.name == "kustomization.yaml" or (path / "kustomization.yaml").exists():
+        kustomize_path = path if path.is_dir() else path.parent
+        logging.info(f"📦 Applying Kustomize directory: {kustomize_path}")
+        run_command(["kubectl", "apply", "-k", str(kustomize_path)])
+    else:
+        logging.info(f"📄 Applying manifest: {path}")
+        run_command(["kubectl", "apply", "-f", str(path)])
 
 
 def create_namespace_if_missing(namespace: str):
@@ -124,7 +130,7 @@ def bootstrap_gitops_stack(env: str, region: str, name: str, platform: str = "rk
     config.load_kube_config()
 
     cluster_dir = scaffold_cluster(env, region, name, platform)
-    apply_manifest("apps/system/base/coredns/coredns.yaml")
+    apply_manifest(Path("apps/system/base/coredns/kustomization.yaml"))
     install_argocd()
     apply_manifest(cluster_dir / "root-app.yaml")
     apply_network_policy()
