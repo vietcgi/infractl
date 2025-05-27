@@ -10,3 +10,6 @@ helmCharts:
     releaseName: rancher
     namespace: rancher
     valuesFile: values.yaml
+    
+helmGlobals:
+  kubeVersion: "1.32.0"
