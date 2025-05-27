@@ -1,3 +1,4 @@
+
 import os
 import time
 import subprocess
@@ -99,14 +100,18 @@ def create_cluster_cmd(
     provision_multipass.provision(config=cluster_config, refresh_only=force_refresh_ips)
 
     logging.info("🔧 Installing RKE2...")
+
+    if install_flux and install_fleet:
+        raise typer.BadParameter("❌ You can only install one GitOps engine: --install-flux OR --install-fleet, not both.")
+
     install_rke2.install(
         region=region,
         env=env,
         name=name,
         force_refresh_ips=force_refresh_ips,
         skip_argocd=skip_argocd,
-        install_flux=install_flux
+        install_flux=install_flux,
+        install_fleet=install_fleet
     )
-
 
     logging.info("✅ Cluster provisioning complete.")
