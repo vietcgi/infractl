@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coredns
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      tolerations:
+        - operator: "Exists"
+      affinity: {}
+      containers:
+        - name: coredns
+          resources:
+            requests:
+              cpu: 30m
+              memory: 70Mi
+            limits:
+              memory: 170Mi
