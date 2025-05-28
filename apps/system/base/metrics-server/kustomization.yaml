@@ -5,6 +5,7 @@ namespace: metrics-server
 
 resources:
   - namespace.yaml
+  - apiservice.yaml
 
 helmCharts:
   - name: metrics-server
