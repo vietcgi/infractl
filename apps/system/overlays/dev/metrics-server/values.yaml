@@ -1,14 +1,24 @@
-replicas: 1
+replicas: 2
+
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+args:
+  - --cert-dir=/tmp
+  - --secure-port=4443
+  - --kubelet-insecure-tls
+  - --kubelet-use-node-status-port
+  - --kubelet-preferred-address-types=InternalIP,Hostname
+  - --metric-resolution=15s
+
+service:
+  port: 443
+  targetPort: 4443
 
 resources:
   requests:
-    cpu: 50m
-    memory: 100Mi
-  limits:
     cpu: 100m
     memory: 200Mi
-
-metrics:
-  serviceMonitor:
-    interval: 60s
-    scrapeTimeout: 5s
+  limits:
+    cpu: 250m
+    memory: 400Mi
