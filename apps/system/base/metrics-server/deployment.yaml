@@ -42,7 +42,7 @@ spec:
               path: /livez
               port: 4443
               scheme: HTTPS
-            initialDelaySeconds: 30  # ← increased
+            initialDelaySeconds: 60  # ← increased
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 5      # ← increased
@@ -52,7 +52,7 @@ spec:
               path: /readyz
               port: 4443
               scheme: HTTPS
-            initialDelaySeconds: 40  # ← increased
+            initialDelaySeconds: 70  # ← increased
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 5
