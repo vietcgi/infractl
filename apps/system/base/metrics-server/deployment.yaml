@@ -41,18 +41,18 @@ spec:
             httpGet:
               path: /livez
               port: 4443
-              scheme: HTTPS
-            initialDelaySeconds: 60  # ← increased
+              scheme: HTTP
+            initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 2
-            failureThreshold: 5      # ← increased
+            failureThreshold: 3
 
           readinessProbe:
             httpGet:
               path: /readyz
               port: 4443
-              scheme: HTTPS
-            initialDelaySeconds: 70  # ← increased
+              scheme: HTTP
+            initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 2
-            failureThreshold: 5
+            failureThreshold: 3
