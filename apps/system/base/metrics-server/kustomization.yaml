@@ -7,3 +7,4 @@ resources:
   - clusterrolebinding.yaml
   - rolebinding.yaml
   - clusterrole.yaml
+  - service.yaml
