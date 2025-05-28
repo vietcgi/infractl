@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
   - ../../../base/metrics-server
+  - hpa.yaml
 
 patchesStrategicMerge:
   - deployment-patch.yaml
-  - hpa.yaml
