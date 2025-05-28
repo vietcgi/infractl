@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-server
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: metrics-server
+          args:
+            - --kubelet-insecure-tls
+            - --kubelet-preferred-address-types=InternalIP,Hostname
+            - --metric-resolution=15s
+          ports:
+            - containerPort: 443
+              name: https
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
