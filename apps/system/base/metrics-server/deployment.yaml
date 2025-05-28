@@ -29,6 +29,7 @@ spec:
             - --kubelet-preferred-address-types=InternalIP
             - --kubelet-use-node-status-port=false
             - --metric-resolution=15s
+            - --cert-dir=/tmp
           resources:
             requests:
               cpu: 50m
