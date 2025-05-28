@@ -40,17 +40,18 @@ spec:
             httpGet:
               path: /livez
               port: 443
-              scheme: HTTP
-            initialDelaySeconds: 20
+              scheme: HTTPS
+            initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+
           readinessProbe:
             httpGet:
               path: /readyz
               port: 443
-              scheme: HTTP
-            initialDelaySeconds: 25
+              scheme: HTTPS
+            initialDelaySeconds: 40
             periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
