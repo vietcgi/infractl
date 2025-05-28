@@ -9,6 +9,9 @@ spec:
   generators:
     - list:
         elements:
+          - name: cert-manager
+            namespace: cert-manager
+            syncWave: "-1"
           - name: cilium
             namespace: kube-system
           - name: coredns
@@ -23,8 +26,6 @@ spec:
             namespace: monitoring
           - name: nginx-ingress
             namespace: ingress-nginx
-          - name: cert-manager
-            namespace: cert-manager
           - name: rancher
             namespace: cattle-system
           - name: alertmanager
@@ -40,6 +41,8 @@ spec:
   template:
     metadata:
       name: '{{name}}-dev'
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{syncWave}}'
     spec:
       project: default
       source:
@@ -48,14 +51,3 @@ spec:
         path: apps/system/overlays/dev/{{name}}
         kustomize:
           buildOptions: --enable-helm
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'
-      syncPolicy:
-        syncOptions:
-          - CreateNamespace=true
-          - ApplyOutOfSyncOnly=true
-          - Validate=true
-        automated:
-          prune: true
-          selfHeal: true

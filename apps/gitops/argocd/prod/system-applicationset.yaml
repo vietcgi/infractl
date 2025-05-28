@@ -10,6 +10,9 @@ spec:
   generators:
     - list:
         elements:
+          - name: cert-manager
+            namespace: cert-manager
+            syncWave: "-1"
           - name: cilium
             namespace: kube-system
           - name: coredns
@@ -24,8 +27,6 @@ spec:
             namespace: monitoring
           - name: nginx-ingress
             namespace: ingress-nginx
-          - name: cert-manager
-            namespace: cert-manager
           - name: rancher
             namespace: cattle-system
           - name: alertmanager
@@ -44,6 +45,8 @@ spec:
       labels:
         app: '{{name}}'
         environment: prod
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{syncWave}}'
     spec:
       project: default
       source:
