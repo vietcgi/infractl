@@ -8,3 +8,4 @@ resources:
   - rolebinding.yaml
   - clusterrole.yaml
   - service.yaml
+  - apiservice.yaml
