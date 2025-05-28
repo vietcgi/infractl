@@ -8,8 +8,8 @@ rke2_disable:
 - rke2-metrics-server
 rke2_download_kubeconf: true
 rke2_servers:
-- https://192.168.64.225:9345
+- https://192.168.64.227:9345
 rke2_tls_san:
-- 192.168.64.225
+- 192.168.64.227
 rke2_token: default-token
 rke2_version: v1.33.1+rke2r1
