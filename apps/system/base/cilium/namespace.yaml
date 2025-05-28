@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-system
+  labels:
+    name: cilium
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cilium-secrets
+  labels:
+    name: cilium-secrets
