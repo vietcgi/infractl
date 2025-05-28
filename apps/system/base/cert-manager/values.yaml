@@ -1,6 +1,6 @@
-installCRDs: false  # Recommended for Helm-based installations
+installCRDs: false  # Managed via separate YAML
 
-replicaCount: 2  # High availability
+replicaCount: 2  # HA setup
 
 resources:
   requests:
@@ -20,7 +20,7 @@ tolerations:
   - operator: "Exists"
 
 webhook:
-  timeoutSeconds: 5
+  timeoutSeconds: 10  # safer under load
 
 podDisruptionBudget:
   enabled: true
@@ -29,12 +29,12 @@ podDisruptionBudget:
 prometheus:
   enabled: true
   servicemonitor:
-    enabled: false
+    enabled: true  # ✅ turn on if using Prometheus Operator
     interval: 30s
     scrapeTimeout: 10s
 
 ingressShim:
-  defaultIssuerKind: ""
+  defaultIssuerKind: ""   # leave blank unless all ingresses share same issuer
   defaultIssuerName: ""
 
 extraArgs:
