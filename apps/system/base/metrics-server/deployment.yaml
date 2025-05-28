@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: metrics-server
+  labels:
+    k8s-app: metrics-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      labels:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "443"
+        prometheus.io/scheme: "https"
+        k8s-app: metrics-server
+    spec:
+      containers:
+        - name: metrics-server
+          image: registry.k8s.io/metrics-server/metrics-server:v0.7.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: https
+              containerPort: 4443
+              protocol: TCP
+          args:
+            - --kubelet-insecure-tls
+            - --kubelet-preferred-address-types=InternalIP,Hostname
+            - --kubelet-use-node-status-port
+            - --metric-resolution=15s
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 4443
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 4443
+              scheme: HTTPS
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+      priorityClassName: system-cluster-critical
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
