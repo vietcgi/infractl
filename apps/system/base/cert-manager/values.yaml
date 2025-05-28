@@ -29,7 +29,7 @@ podDisruptionBudget:
 prometheus:
   enabled: true
   servicemonitor:
-    enabled: true
+    enabled: false
     interval: 30s
     scrapeTimeout: 10s
 
