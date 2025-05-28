@@ -5,6 +5,7 @@ metadata:
   namespace: argocd
   labels:
     environment: dev
+    type: system
 spec:
   generators:
     - list:
@@ -32,6 +33,7 @@ spec:
             namespace: monitoring
           - name: sealed-secrets
             namespace: kube-system
+            syncWave: "-2"
           - name: metrics-server
             namespace: kube-system
           - name: neuvector
@@ -41,6 +43,9 @@ spec:
   template:
     metadata:
       name: '{{name}}-dev'
+      labels:
+        app: '{{name}}'
+        environment: dev
       annotations:
         argocd.argoproj.io/sync-wave: '{{syncWave}}'
     spec:
@@ -51,3 +56,14 @@ spec:
         path: apps/system/overlays/dev/{{name}}
         kustomize:
           buildOptions: --enable-helm
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - ApplyOutOfSyncOnly=true
+          - Validate=true
+        automated:
+          prune: true
+          selfHeal: true

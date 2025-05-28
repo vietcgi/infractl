@@ -22,4 +22,4 @@ resources:
     memory: 256Mi
 
 rbac:
-  creat
+  create: true

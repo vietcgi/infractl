@@ -33,6 +33,7 @@ spec:
             namespace: monitoring
           - name: sealed-secrets
             namespace: kube-system
+            syncWave: "-2"
           - name: metrics-server
             namespace: kube-system
           - name: neuvector
