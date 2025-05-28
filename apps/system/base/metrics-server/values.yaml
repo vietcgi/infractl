@@ -1,4 +1,4 @@
-replicas: 2
+replicaCount: 2
 
 resources:
   requests:
@@ -13,12 +13,22 @@ args:
   - --kubelet-preferred-address-types=InternalIP,Hostname
   - --kubelet-use-node-status-port
   - --metric-resolution=15s
-  
+
+# Prevent Helm from registering broken APIService
 apiService:
   create: false
 
+# Correctly expose internal port and match the real container
+containerPort: 4443
+
+ports:
+  - name: https
+    containerPort: 4443
+    protocol: TCP
+
 service:
   port: 443
+  targetPort: https
   type: ClusterIP
 
 livenessProbe:
