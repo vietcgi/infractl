@@ -4,14 +4,14 @@ metadata:
   name: system:metrics-server
 rules:
   - apiGroups: [""]
-    resources: ["nodes", "nodes/stats", "pods", "namespaces"]
+    resources:
+      - nodes
+      - nodes/stats
+      - nodes/proxy
+      - pods
+      - services
+      - endpoints
+      - namespaces
     verbs: ["get", "list", "watch"]
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list"]
-  - apiGroups: ["batch"]
-    resources: ["jobs"]
-    verbs: ["get", "list"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
-
