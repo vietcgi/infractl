@@ -28,6 +28,7 @@ spec:
             - --kubelet-insecure-tls
             - --kubelet-preferred-address-types=InternalIP,Hostname
             - --metric-resolution=15s
+            - --cert-dir=/tmp
           resources:
             requests:
               cpu: 50m
