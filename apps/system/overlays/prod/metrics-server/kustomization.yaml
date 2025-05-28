@@ -5,5 +5,8 @@ resources:
   - ../../../base/metrics-server
   - hpa.yaml
 
-patchesStrategicMerge:
-  - deployment-patch.yaml
+patches:
+  - path: patch-resources.yaml
+    target:
+      kind: Deployment
+      name: metrics-server
