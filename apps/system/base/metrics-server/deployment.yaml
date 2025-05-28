@@ -22,14 +22,12 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: https
-              containerPort: 4443
+              containerPort: 443
               protocol: TCP
           args:
             - --kubelet-insecure-tls
-            - --kubelet-preferred-address-types=InternalIP
-            - --kubelet-use-node-status-port=false
+            - --kubelet-preferred-address-types=InternalIP,Hostname
             - --metric-resolution=15s
-            - --cert-dir=/tmp
           resources:
             requests:
               cpu: 50m
@@ -40,19 +38,18 @@ spec:
           livenessProbe:
             httpGet:
               path: /livez
-              port: 4443
+              port: 443
               scheme: HTTP
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 2
-            failureThreshold: 3
-
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /readyz
-              port: 4443
+              port: 443
               scheme: HTTP
-            initialDelaySeconds: 15
+            initialDelaySeconds: 25
             periodSeconds: 10
             timeoutSeconds: 2
-            failureThreshold: 3
+            failureThreshold: 5
