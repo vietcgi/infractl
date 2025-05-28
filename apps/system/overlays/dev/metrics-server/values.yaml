@@ -6,8 +6,8 @@ dnsPolicy: ClusterFirstWithHostNet
 args:
   - --cert-dir=/tmp
   - --secure-port=4443
-  - --kubelet-insecure-tls                # Required for self-signed kubelet certs
-  - --kubelet-use-node-status-port        # Optional for fallback to insecure port (if enabled)
+  - --kubelet-insecure-tls
+  - --kubelet-use-node-status-port
   - --kubelet-preferred-address-types=InternalIP,Hostname
   - --metric-resolution=15s
 
@@ -15,6 +15,10 @@ service:
   port: 443
   targetPort: 4443
   type: ClusterIP
+
+apiService:
+  insecureSkipTLSVerify: true
+  port: 443
 
 resources:
   requests:
@@ -30,9 +34,9 @@ livenessProbe:
     path: /livez
     port: 4443
     scheme: HTTPS
-  initialDelaySeconds: 10
+  initialDelaySeconds: 15
   periodSeconds: 10
-  timeoutSeconds: 1
+  timeoutSeconds: 3
   failureThreshold: 3
 
 readinessProbe:
@@ -41,9 +45,9 @@ readinessProbe:
     path: /readyz
     port: 4443
     scheme: HTTPS
-  initialDelaySeconds: 20
+  initialDelaySeconds: 30
   periodSeconds: 10
-  timeoutSeconds: 1
+  timeoutSeconds: 3
   failureThreshold: 3
 
 metrics:
@@ -64,14 +68,4 @@ tolerations:
     effect: "NoSchedule"
   - operator: "Exists"
 
-priorityClassName: system-cluster-critical
-
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
-
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 60
+priorityClassName: system
