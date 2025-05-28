@@ -26,11 +26,9 @@ spec:
               protocol: TCP
           args:
             - --kubelet-insecure-tls
-            - --kubelet-preferred-address-types=InternalIP,Hostname
+            - --kubelet-preferred-address-types=InternalIP
+            - --kubelet-use-node-status-port=false
             - --metric-resolution=15s
-            - --cert-dir=/tmp
-            - --secure-port=4443
-            - --kubelet-use-node-status-port
           resources:
             requests:
               cpu: 50m
