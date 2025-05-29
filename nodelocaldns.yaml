@@ -137,7 +137,13 @@ spec:
           requests:
             cpu: 25m
             memory: 5Mi
-        args: [ "-localip", "__PILLAR__LOCAL__DNS__,__PILLAR__DNS__SERVER__", "-conf", "/etc/Corefile", "-upstreamsvc", "kube-dns-upstream" ]
+        args:
+          - -localip
+          - 169.254.20.10
+          - -conf
+          - /etc/Corefile
+          - -upstreamsvc
+          - kube-dns-upstream
         securityContext:
           capabilities:
             add:
