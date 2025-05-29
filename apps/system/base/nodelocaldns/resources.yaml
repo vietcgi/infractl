@@ -20,7 +20,12 @@ data:
         prometheus 127.0.0.1:9253
         log
     }
-
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nodelocaldns
+  namespace: kube-system
 ---
 apiVersion: apps/v1
 kind: DaemonSet
