@@ -88,15 +88,15 @@ spec:
         chart: '{{chart}}'
         repoURL: '{{repoURL}}'
         targetRevision: '{{version}}'
-        path: .
+        path: apps/system/base/{{name}}
         helm:
           valueFiles:
-            - apps/system/base/{{name}}/values.yaml
-            - apps/system/base/{{name}}/values-dev.yaml
+            - values.yaml
+            - values-dev.yaml
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
-      revisionHistoryLimit: 3
+      revisionHistoryLimit: 3  # ✅ keeps ArgoCD UI clean
