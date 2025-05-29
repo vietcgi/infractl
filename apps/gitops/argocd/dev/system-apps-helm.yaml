@@ -58,7 +58,8 @@ spec:
             namespace: ingress-nginx
           - name: rancher
             chart: rancher
-            version: 2.8.0
+            version: 2.11.2
+            kubeVersion: 1.32.0
             repoURL: https://releases.rancher.com/server-charts/latest
             namespace: cattle-system
           - name: alertmanager
