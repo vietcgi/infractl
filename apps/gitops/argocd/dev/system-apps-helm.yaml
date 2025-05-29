@@ -24,7 +24,6 @@ spec:
             version: 1.5.3
             repoURL: https://charts.longhorn.io
             namespace: longhorn-system
-            type: helm
             syncWave: "-2"
           - name: sealed-secrets
             chart: sealed-secrets
@@ -32,55 +31,46 @@ spec:
             repoURL: https://bitnami-labs.github.io/sealed-secrets
             namespace: kube-system
             syncWave: "-1"
-            type: helm
           - name: cilium
             chart: cilium
             version: 1.17.4
             repoURL: https://helm.cilium.io
             namespace: kube-system
-            type: helm
           - name: prometheus
             chart: kube-prometheus-stack
             version: 56.6.2
             repoURL: https://prometheus-community.github.io/helm-charts
             namespace: monitoring
-            type: helm
           - name: loki
             chart: loki
             version: 5.44.0
             repoURL: https://grafana.github.io/helm-charts
             namespace: monitoring
-            type: helm
           - name: grafana
             chart: grafana
             version: 7.3.10
             repoURL: https://grafana.github.io/helm-charts
             namespace: monitoring
-            type: helm
           - name: nginx-ingress
             chart: ingress-nginx
             version: 4.9.0
             repoURL: https://kubernetes.github.io/ingress-nginx
             namespace: ingress-nginx
-            type: helm
           - name: rancher
             chart: rancher
             version: 2.8.0
             repoURL: https://releases.rancher.com/server-charts/latest
             namespace: cattle-system
-            type: helm
           - name: alertmanager
             chart: alertmanager
             version: 1.7.0
             repoURL: https://prometheus-community.github.io/helm-charts
             namespace: monitoring
-            type: helm
           - name: neuvector
             chart: core
             version: 2.6.6
             repoURL: https://neuvector.github.io/neuvector-helm
             namespace: neuvector
-            type: helm
   template:
     metadata:
       name: '{{name}}-dev'
@@ -98,14 +88,15 @@ spec:
         chart: '{{chart}}'
         repoURL: '{{repoURL}}'
         targetRevision: '{{version}}'
+        path: apps/system/base/{{name}}
         helm:
           valueFiles:
             - values.yaml
-            - ../../overlays/dev/{{name}}/values-dev.yaml
-        path: apps/system/base/{{name}}
+            - values-dev.yaml
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
+      revisionHistoryLimit: 3  # ✅ keeps ArgoCD UI clean
