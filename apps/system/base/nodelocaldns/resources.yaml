@@ -42,14 +42,13 @@ data:
     cluster.local:53 {
         errors
         cache {
-                success 9984 30
-                denial 9984 5
+            success 9984 30
+            denial 9984 5
         }
         reload
         loop
-        bind 169.254.20.10 169.254.20.10
         forward . 10.43.0.10 {
-                force_tcp
+            force_tcp
         }
         prometheus :9253
         health 169.254.20.10:8080
@@ -59,9 +58,8 @@ data:
         cache 30
         reload
         loop
-        bind 169.254.20.10 169.254.20.10
         forward . 10.43.0.10 {
-                force_tcp
+            force_tcp
         }
         prometheus :9253
     }
@@ -70,9 +68,8 @@ data:
         cache 30
         reload
         loop
-        bind 169.254.20.10 169.254.20.10
         forward . 10.43.0.10 {
-                force_tcp
+            force_tcp
         }
         prometheus :9253
     }
