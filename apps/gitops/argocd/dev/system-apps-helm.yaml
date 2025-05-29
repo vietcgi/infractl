@@ -84,19 +84,21 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'
-      source:
-        chart: '{{chart}}'
-        repoURL: '{{repoURL}}'
-        targetRevision: '{{version}}'
-        path: apps/system/base/{{name}}
-        helm:
-          valueFiles:
-            - values.yaml
-            - values-dev.yaml
+      sources:
+        - chart: '{{chart}}'
+          repoURL: '{{repoURL}}'
+          targetRevision: '{{version}}'
+          helm:
+            valueFiles:
+              - values.yaml
+              - values-dev.yaml
+        - repoURL: https://github.com/vietcgi/infractl.git
+          targetRevision: dev
+          path: apps/system/base/{{name}}
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
-      revisionHistoryLimit: 3  # ✅ keeps ArgoCD UI clean
+      revisionHistoryLimit: 3
