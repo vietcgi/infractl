@@ -85,6 +85,26 @@ spec:
       port: 53
       protocol: TCP
 ---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: coredns
+  namespace: kube-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: coredns
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -118,11 +138,9 @@ spec:
               name: dns-tcp
               protocol: TCP
           resources:
-            limits:
-              memory: 170Mi
             requests:
-              cpu: 100m
-              memory: 70Mi
+              cpu: 500m
+              memory: 500Mi
       volumes:
         - name: config-volume
           configMap:
