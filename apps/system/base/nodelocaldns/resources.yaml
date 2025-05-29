@@ -155,7 +155,7 @@ spec:
           name: xtables-lock
           readOnly: false
         - name: config-volume
-          mountPath: /etc/nodelocaldns
+          mountPath: /etc/coredns
           readOnly: true
         - name: writable-config
           mountPath: /etc/coredns
