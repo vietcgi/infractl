@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: system-apps-raw
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: coredns
+            namespace: kube-system
+            syncWave: "-5"
+            type: raw
+          - name: cert-manager-crds
+            namespace: cert-manager
+            syncWave: "-4"
+            type: raw
+          - name: prometheus-operator-crds
+            namespace: monitoring
+            syncWave: "-3"
+            type: raw
+          - name: metrics-server
+            namespace: kube-system
+            syncWave: "-2"
+            type: raw
+          - name: nodelocaldns
+            namespace: kube-system
+            syncWave: "-1"
+            type: raw
+  template:
+    metadata:
+      name: '{{name}}-dev'
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{syncWave}}'
+      labels:
+        app: '{{name}}'
+        environment: dev
+    spec:
+      project: default
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      source:
+        repoURL: https://github.com/vietcgi/infractl.git
+        targetRevision: dev
+        path: apps/system/overlays/dev/{{name}}
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

@@ -1,35 +1,36 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: system-apps-dev
+  name: system-apps-helm
   namespace: argocd
-  labels:
-    environment: dev
-    type: system
 spec:
   generators:
     - list:
         elements:
-          - name: cert-manager-crds
-            namespace: cert-manager
+          - name: argocd
+            chart: argo-cd
+            version: 8.0.10
+            repoURL: https://argoproj.github.io/argo-helm
+            namespace: argocd
             syncWave: "-4"
-            type: raw
-          - name: prometheus-operator-crds
-            namespace: monitoring
-            syncWave: "-3"
-            type: helm
-          - name: sealed-secrets
-            chart: sealed-secrets
-            version: 2.15.3
-            repoURL: https://bitnami-labs.github.io/sealed-secrets
-            namespace: kube-system
-            syncWave: "-2"
-            type: helm
           - name: cert-manager
             chart: cert-manager
             version: 1.13.2
             repoURL: https://charts.jetstack.io
             namespace: cert-manager
+            syncWave: "-3"
+          - name: longhorn
+            chart: longhorn
+            version: 1.5.3
+            repoURL: https://charts.longhorn.io
+            namespace: longhorn-system
+            type: helm
+            syncWave: "-2"
+          - name: sealed-secrets
+            chart: sealed-secrets
+            version: 2.15.3
+            repoURL: https://bitnami-labs.github.io/sealed-secrets
+            namespace: kube-system
             syncWave: "-1"
             type: helm
           - name: cilium
@@ -38,21 +39,11 @@ spec:
             repoURL: https://helm.cilium.io
             namespace: kube-system
             type: helm
-          - name: coredns
-            namespace: kube-system
-            syncWave: "-2"
-            type: raw
           - name: prometheus
             chart: kube-prometheus-stack
             version: 56.6.2
             repoURL: https://prometheus-community.github.io/helm-charts
             namespace: monitoring
-            type: helm
-          - name: argocd
-            chart: argo-cd
-            version: 8.0.10
-            repoURL: https://argoproj.github.io/argo-helm
-            namespace: argocd
             type: helm
           - name: loki
             chart: loki
@@ -84,41 +75,26 @@ spec:
             repoURL: https://prometheus-community.github.io/helm-charts
             namespace: monitoring
             type: helm
-          - name: metrics-server
-            namespace: kube-system
-            syncWave: "-1"
-            type: raw
           - name: neuvector
             chart: core
             version: 2.6.6
             repoURL: https://neuvector.github.io/neuvector-helm
             namespace: neuvector
             type: helm
-          - name: longhorn
-            chart: longhorn
-            version: 1.5.3
-            repoURL: https://charts.longhorn.io
-            namespace: longhorn-system
-            type: helm
-          - name: nodelocaldns
-            namespace: kube-system
-            syncWave: "-1"
-            type: raw
   template:
     metadata:
       name: '{{name}}-dev'
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{syncWave}}'
       labels:
         app: '{{name}}'
         environment: dev
-      annotations:
-        argocd.argoproj.io/sync-wave: '{{syncWave}}'
     spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'
-      source: |
-        {{ if eq .type "helm" }}
+      source:
         chart: '{{chart}}'
         repoURL: '{{repoURL}}'
         targetRevision: '{{version}}'
@@ -127,18 +103,9 @@ spec:
             - values.yaml
             - ../../overlays/dev/{{name}}/values-dev.yaml
         path: apps/system/base/{{name}}
-        {{ else }}
-        repoURL: https://github.com/vietcgi/infractl.git
-        targetRevision: dev
-        path: apps/system/overlays/dev/{{name}}
-        kustomize:
-          buildOptions: --enable-helm
-        {{ end }}
       syncPolicy:
-        syncOptions:
-          - CreateNamespace=true
-          - ApplyOutOfSyncOnly=true
-          - Validate=true
         automated:
           prune: true
           selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

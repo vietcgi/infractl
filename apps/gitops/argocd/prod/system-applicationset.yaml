@@ -10,14 +10,6 @@ spec:
   generators:
     - list:
         elements:
-          - name: cert-manager-crds
-            namespace: cert-manager
-            syncWave: "-4"
-            type: raw
-          - name: prometheus-operator-crds
-            namespace: monitoring
-            syncWave: "-3"
-            type: raw
           - name: sealed-secrets
             chart: sealed-secrets
             version: 2.15.3
@@ -38,10 +30,6 @@ spec:
             repoURL: https://helm.cilium.io
             namespace: kube-system
             type: helm
-          - name: coredns
-            namespace: kube-system
-            syncWave: "-2"
-            type: raw
           - name: prometheus
             chart: kube-prometheus-stack
             version: 56.6.2
@@ -84,10 +72,6 @@ spec:
             repoURL: https://prometheus-community.github.io/helm-charts
             namespace: monitoring
             type: helm
-          - name: metrics-server
-            namespace: kube-system
-            syncWave: "-1"
-            type: raw
           - name: neuvector
             chart: core
             version: 2.6.6
@@ -100,10 +84,6 @@ spec:
             repoURL: https://charts.longhorn.io
             namespace: longhorn-system
             type: helm
-          - name: nodelocaldns
-            namespace: kube-system
-            syncWave: "-1"
-            type: raw
   template:
     metadata:
       name: '{{name}}-prod'
@@ -116,29 +96,26 @@ spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'
-      source: |
-        {{ if eq .type "helm" }}
-        chart: '{{chart}}'
-        repoURL: '{{repoURL}}'
-        targetRevision: '{{version}}'
+        namespace: '{{path.basename}}'
+      source:
+        repoURL: https://github.com/vietcgi/infractl.git
+        targetRevision: dev
+        path: '{{path.path}}'
+        {{ if or (eq .path.basename "metrics-server") (eq .path.basename "coredns") (eq .path.basename "nodelocaldns") }}
+        kustomize:
+          buildOptions: --enable-helm
+        {{ else }}
         helm:
           valueFiles:
             - values.yaml
-            - ../../overlays/prod/{{name}}/values-prod.yaml
-        path: apps/system/base/{{name}}
-        {{ else }}
-        repoURL: https://github.com/vietcgi/infractl.git
-        targetRevision: main
-        path: apps/system/overlays/dev/{{name}}
-        kustomize:
-          buildOptions: --enable-helm
+            - ../../overlays/dev/{{path.basename}}/values-dev.yaml
+        chart: '{{path.basename}}'
+        repoURL: '{{repoURL}}'
+        targetRevision: '{{version}}'
         {{ end }}
       syncPolicy:
+        automated:
+          selfHeal: true
+          prune: true
         syncOptions:
           - CreateNamespace=true
-          - ApplyOutOfSyncOnly=true
-          - Validate=true
-        automated:
-          prune: true
-          selfHeal: true
