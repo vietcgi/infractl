@@ -160,7 +160,7 @@ spec:
           protocol: TCP
         livenessProbe:
           httpGet:
-            host: __PILLAR__LOCAL__DNS__
+            host: 169.254.20.10
             path: /health
             port: 8080
           initialDelaySeconds: 60
