@@ -95,7 +95,7 @@ spec:
           helm:
           valueFiles:
             - values.yaml
-            - values-dev.yaml
+            - ../../overlays/{{name}}/values-dev.yaml
       syncPolicy:
         automated:
           prune: true
