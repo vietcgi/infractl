@@ -35,8 +35,6 @@ kind: ConfigMap
 metadata:
   name: node-local-dns
   namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
 data:
   Corefile: |
     cluster.local:53 {
@@ -78,7 +76,6 @@ data:
         cache 30
         reload
         loop
-        bind 169.254.20.10 169.254.20.10
         forward . 8.8.8.8 1.1.1.1
         prometheus :9253
     }
@@ -175,7 +172,7 @@ spec:
           name: node-local-dns
           items:
             - key: Corefile
-              path: Corefile
+              path: Corefile.base
 ---
 apiVersion: v1
 kind: Service
