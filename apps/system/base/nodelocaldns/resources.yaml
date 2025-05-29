@@ -141,9 +141,10 @@ spec:
           - -localip
           - 169.254.25.10
           - -conf
-          - /etc/Corefile
+          - /etc/coredns/Corefile
           - -upstreamsvc
-          - kube-dns-upstream
+          - coredns
+          - -skipteardown
         securityContext:
           capabilities:
             add:
