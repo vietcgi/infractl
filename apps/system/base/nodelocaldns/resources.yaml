@@ -150,9 +150,11 @@ spec:
             - NET_ADMIN
         ports:
         - containerPort: 53
+          hostPort: 0
           name: dns
           protocol: UDP
         - containerPort: 53
+          hostPort: 0
           name: dns-tcp
           protocol: TCP
         - containerPort: 9253
