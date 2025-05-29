@@ -91,12 +91,12 @@ spec:
         path: apps/system/base/{{name}}
         helm:
           valueFiles:
-            - values.yaml
-            - values-dev.yaml
+            - apps/system/base/{{name}}/values.yaml
+            - apps/system/base/{{name}}/values-dev.yaml
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
-      revisionHistoryLimit: 3  # ✅ keeps ArgoCD UI clean
+      revisionHistoryLimit: 3
