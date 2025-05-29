@@ -141,6 +141,8 @@ spec:
         args:
           - -localip
           - 169.254.25.10
+          - -bind
+          - 169.254.25.10
           - -conf
           - /etc/Corefile
           - -upstreamsvc
