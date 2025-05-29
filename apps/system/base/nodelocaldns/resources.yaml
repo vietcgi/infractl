@@ -155,6 +155,9 @@ spec:
           name: xtables-lock
           readOnly: false
         - name: config-volume
+          mountPath: /etc/nodelocaldns
+          readOnly: true
+        - name: writable-config
           mountPath: /etc/coredns
         - name: kube-dns-config
           mountPath: /etc/kube-dns
@@ -173,6 +176,8 @@ spec:
           items:
             - key: Corefile
               path: Corefile.base
+      - name: writable-config
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
