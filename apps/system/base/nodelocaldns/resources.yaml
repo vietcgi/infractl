@@ -132,7 +132,7 @@ spec:
           - -localip
           - 169.254.20.10
           - -conf
-          - /etc/nodelocaldns/Corefile
+          - /etc/coredns/Corefile
           - -upstreamsvc
           - kube-dns
         securityContext:
@@ -161,7 +161,7 @@ spec:
           name: xtables-lock
           readOnly: false
         - name: config-volume
-          mountPath: /etc/nodelocaldns
+          mountPath: /etc/coredns
         - name: kube-dns-config
           mountPath: /etc/kube-dns
       volumes:
