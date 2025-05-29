@@ -1,9 +1,0 @@
-apiVersion: builtin
-kind: HelmChartInflationGenerator
-metadata:
-  name: rancher
-valuesInline:
-  replicas: 1
-  ingress:
-    tls:
-      source: rancher
