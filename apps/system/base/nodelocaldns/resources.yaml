@@ -141,7 +141,7 @@ spec:
           - -localip
           - 169.254.25.10
           - -conf
-          - /etc/coredns/Corefile
+          - /etc/Corefile
           - -upstreamsvc
           - coredns
           - -skipteardown
