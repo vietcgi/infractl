@@ -178,7 +178,7 @@ spec:
           name: node-local-dns
           items:
             - key: Corefile
-              path: Corefile.base
+              path: Corefile
 ---
 apiVersion: v1
 kind: Service
