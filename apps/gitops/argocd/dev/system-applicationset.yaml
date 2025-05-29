@@ -10,10 +10,11 @@ spec:
   generators:
     - list:
         elements:
+          - name: cert-manager-crds
+            namespace: cert-manager
+            syncWave: "-4"
+            type: raw
           - name: prometheus-operator-crds
-            chart: kube-prometheus-stack
-            version: 56.6.2
-            repoURL: https://prometheus-community.github.io/helm-charts
             namespace: monitoring
             syncWave: "-3"
             type: helm
@@ -116,7 +117,8 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'
-      source: {{ if eq .type "helm" }}
+      source: |
+        {{ if eq .type "helm" }}
         chart: '{{chart}}'
         repoURL: '{{repoURL}}'
         targetRevision: '{{version}}'
@@ -125,13 +127,13 @@ spec:
             - values.yaml
             - ../../overlays/dev/{{name}}/values-dev.yaml
         path: apps/system/base/{{name}}
-      {{ else }}
+        {{ else }}
         repoURL: https://github.com/vietcgi/infractl.git
         targetRevision: dev
         path: apps/system/overlays/dev/{{name}}
         kustomize:
           buildOptions: --enable-helm
-      {{ end }}
+        {{ end }}
       syncPolicy:
         syncOptions:
           - CreateNamespace=true

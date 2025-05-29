@@ -117,7 +117,8 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'
-      source: {{ if eq .type "helm" }}
+      source: |
+        {{ if eq .type "helm" }}
         chart: '{{chart}}'
         repoURL: '{{repoURL}}'
         targetRevision: '{{version}}'
@@ -126,13 +127,13 @@ spec:
             - values.yaml
             - ../../overlays/prod/{{name}}/values-prod.yaml
         path: apps/system/base/{{name}}
-      {{ else }}
+        {{ else }}
         repoURL: https://github.com/vietcgi/infractl.git
         targetRevision: main
-        path: apps/system/overlays/prod/{{name}}
+        path: apps/system/overlays/dev/{{name}}
         kustomize:
           buildOptions: --enable-helm
-      {{ end }}
+        {{ end }}
       syncPolicy:
         syncOptions:
           - CreateNamespace=true
