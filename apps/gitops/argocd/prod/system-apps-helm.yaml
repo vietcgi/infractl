@@ -9,10 +9,10 @@ spec:
         generators:
           - files:
               files:
-                - path: ./catalog/clusters.json
+                - path: catalog/clusters.json
           - files:
               files:
-                - path: ./catalog/apps.json
+                - path: catalog/apps.json
   template:
     metadata:
       name: '{{name}}-{{clusterName}}'
