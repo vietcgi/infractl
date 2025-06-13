@@ -1,6 +1,6 @@
-installCRDs: true  # Required if you're installing via Helm and not managing CRDs separately
+installCRDs: false  # Managed via separate YAML
 
-replicaCount: 2  # HA deployment across nodes
+replicaCount: 2  # HA setup
 
 resources:
   requests:
@@ -20,7 +20,7 @@ tolerations:
   - operator: "Exists"
 
 webhook:
-  timeoutSeconds: 5
+  timeoutSeconds: 10  # safer under load
 
 podDisruptionBudget:
   enabled: true
@@ -29,20 +29,14 @@ podDisruptionBudget:
 prometheus:
   enabled: true
   servicemonitor:
-    enabled: true
+    enabled: true  # ✅ turn on if using Prometheus Operator
     interval: 30s
     scrapeTimeout: 10s
-    additionalLabels:
-      release: prometheus
 
-# Disable default ingress-shim to use your own ClusterIssuers
 ingressShim:
-  defaultIssuerKind: ""
+  defaultIssuerKind: ""   # leave blank unless all ingresses share same issuer
   defaultIssuerName: ""
 
-# Optional: adjust controller args for DNS challenge providers or extended logs
 extraArgs:
   - --enable-certificate-owner-ref=true
   - --cluster-resource-namespace=cert-manager
-
-priorityClassName: system-cluster-critical

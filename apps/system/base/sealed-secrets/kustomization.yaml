@@ -1,12 +1,13 @@
-resources:
-  - namespace.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+resources:
+  - sealedsecret-crd.yaml
 
 helmCharts:
   - name: sealed-secrets
     repo: https://bitnami-labs.github.io/sealed-secrets
-    version: 2.29.0
+    version: 2.15.3
     releaseName: sealed-secrets
-    namespace: sealed-secrets
+    namespace: kube-system
     valuesFile: values.yaml

@@ -1,0 +1,30 @@
+# RKE2 Default Configuration
+# This file can be copied to one of these locations to customize settings:
+# - /etc/emodo/rke2/config.yaml
+# - ~/.config/emodo/rke2/config.yaml
+# - ./rke2-config.yaml
+
+# SSH Configuration
+ssh:
+  user: ubuntu
+  key_path: ~/.ssh/id_rsa
+  port: 22
+  connect_timeout: 60
+  command_timeout: 120
+  retry_attempts: 3
+
+# Logging Configuration
+logging:
+  level: INFO
+  file: null  # Set to a path to log to file
+  max_size_mb: 100
+  backup_count: 5
+
+# Cluster Configuration
+cluster:
+  # token will be auto-generated if not specified
+  token: null
+  interface: bond0.100
+  service_cidr: 10.43.0.0/16
+  pod_cidr: 10.42.0.0/16
+  cluster_dns: 10.43.0.10

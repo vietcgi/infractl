@@ -14,14 +14,31 @@ def provision(config: dict, refresh_only: bool = False):
     ips = {}
     for node in nodes:
         vm_name = node["name"]
-        role = "master" if "master" in vm_name else "worker"
         print(f"🔁 Checking IP for Multipass VM → {vm_name}")
         try:
             result = subprocess.run([
                 "multipass", "info", vm_name, "--format", "json"
             ], capture_output=True, text=True, check=True)
             data = json.loads(result.stdout)
-            ips[role] = data["info"][vm_name]["ipv4"][0]
+            # Get all IPs and filter out the VIP (192.168.64.100)
+            all_ips = data["info"][vm_name].get("ipv4", [])
+            if not all_ips:
+                print(f"⚠️  No IPs found for {vm_name}")
+                continue
+                
+            # Convert to list if it's a string
+            ip_list = [all_ips] if isinstance(all_ips, str) else all_ips
+            
+            # Filter out the VIP and empty strings
+            valid_ips = [ip for ip in ip_list if ip and ip != '192.168.64.100']
+            
+            if not valid_ips:
+                print(f"⚠️  No valid IPs found for {vm_name} (after filtering)")
+                continue
+                
+            # Use the first valid IP and store it with the node name as the key
+            ips[vm_name] = valid_ips[0]
+            print(f"✅ Assigned IP {ips[vm_name]} to {vm_name}")
         except Exception:
             print(f"ℹ️  VM {vm_name} not found. Launching new instance...")
             if not refresh_only:
@@ -38,7 +55,25 @@ def provision(config: dict, refresh_only: bool = False):
                     "multipass", "info", vm_name, "--format", "json"
                 ], capture_output=True, text=True, check=True)
                 data = json.loads(result.stdout)
-                ips[role] = data["info"][vm_name]["ipv4"][0]
+                # Get all IPs and filter out the VIP (192.168.64.100)
+                all_ips = data["info"][vm_name].get("ipv4", [])
+                if not all_ips:
+                    print(f"⚠️  No IPs found for {vm_name} after launch")
+                    continue
+                    
+                # Convert to list if it's a string
+                ip_list = [all_ips] if isinstance(all_ips, str) else all_ips
+                
+                # Filter out the VIP and empty strings
+                valid_ips = [ip for ip in ip_list if ip and ip != '192.168.64.100']
+                
+                if not valid_ips:
+                    print(f"⚠️  No valid IPs found for {vm_name} (after filtering)")
+                    continue
+                    
+                # Use the first valid IP and store it with the node name as the key
+                ips[vm_name] = valid_ips[0]
+                print(f"✅ Assigned IP {ips[vm_name]} to {vm_name} after launch")
 
             # Inject SSH key
             print(f"🔐 Adding ~/.ssh/id_rsa.pub to authorized_keys on {vm_name}...")
@@ -60,25 +95,32 @@ def provision(config: dict, refresh_only: bool = False):
     inventory_lines = [
         "[masters]",
         *[
-            f"{node['name']} ansible_host={ips.get('master', '0.0.0.0')}"
+            f"{node['name']} ansible_host={ips.get(node['name'], '0.0.0.0')}"
             for node in config["masters"]
         ],
-        "",
-        "[workers]",
+        "\n[workers]",
         *[
-            f"{node['name']} ansible_host={ips.get('worker', '0.0.0.0')}"
+            f"{node['name']} ansible_host={ips.get(node['name'], '0.0.0.0')}"
             for node in config["agents"]
         ],
-        "",
-        "[k8s_cluster:children]",
+        "\n[k8s_cluster:children]",
         "masters",
         "workers",
-        "",
-        "[all:vars]",
+        "\n[all:vars]",
         "ansible_user=ubuntu",
-        "ansible_ssh_private_key_file=~/.ssh/id_rsa"
+        f"ansible_ssh_private_key_file={os.path.expanduser(config.get('ssh_key', '~/.ssh/id_rsa'))}",
+        "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"
     ]
-    Path("ansible").mkdir(parents=True, exist_ok=True)
+
+    # Ensure inventory directory exists
+    os.makedirs(os.path.dirname(inventory), exist_ok=True)
+
+    # Debug: Print the inventory content before writing
+    print("\n🔧 Generated inventory content:")
+    print("\n".join(inventory_lines))
+
     with open(inventory, "w") as f:
-        f.write("\n".join(inventory_lines))
+        f.write("\n".join(inventory_lines) + "\n")
+    
     print(f"📄 Inventory updated: {inventory}")
+    return ips

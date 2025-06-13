@@ -1,0 +1,50 @@
+configs:
+  cm:
+    oidc.config: |
+      name: Okta
+      issuer: https://emodo.okta.com
+      clientID: $OKTA_CLIENT_ID
+      clientSecret: $OKTA_CLIENT_SECRET
+      requestedScopes:
+        - openid
+        - profile
+        - email
+      redirectURI: https://argocd-dc11a.prod.dc11.emodo.io/api/dex/callback
+    url: https://argocd-dc11a.prod.dc11.emodo.io
+    dex.config: ""  # Disable Dex since we're using native OIDC
+
+  params:
+    server.insecure: false
+
+  secret:
+    createSecret: false  # managed via SealedSecret
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - argocd-dc11a.prod.dc11.emodo.io
+    tls:
+      - secretName: argocd-dc11a-tls
+        hosts:
+          - argocd-dc11a.prod.dc11.emodo.io
+
+  extraEnvFrom:
+    - secretRef:
+        name: okta-sso-secret
+
+dex:
+  enabled: false
+
+applicationSet:
+  enabled: true
+
+notifications:
+  enabled: true
+
+redis:
+  enabled: true

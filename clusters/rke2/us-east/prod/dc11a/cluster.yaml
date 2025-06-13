@@ -1,0 +1,48 @@
+agents:
+- name: native-newt
+  ip: 10.10.241.4
+- name: noble-tick
+  ip: 10.10.241.3
+- name: safe-urchin
+  ip: 10.10.242.64
+
+apps:
+- apps/prod/applicationset.yaml
+- apps/prod/dc11a-custom.yaml
+
+cluster_api: null
+cluster_type: rke2
+env: prod
+inventory: ansible/hosts-us-east-prod-dc11a.ini
+kubeconfig: ~/.kube/rke2-us-east-prod-dc11a.yaml
+kubernetes_version: v1.33.1+rke2r1
+
+masters:
+- name: bold-iguana
+  ip: 10.10.241.43
+- name: boss-mullet
+  ip: 10.10.241.42
+- name: busy-feline
+  ip: 10.10.241.40
+
+name: dc11a
+os: '24.04'
+platform: rke2
+provisioner: ansible
+purpose: production
+region: us-east
+server_type: baremetal
+ssh_key: ~/.ssh/id_rsa
+
+status:
+  deleted: true
+  last_updated: '2025-05-29T19:56:12.062805'
+  provisioned: false
+
+tags:
+  owner: kevin
+  team: devops
+  tier: prod-cluster
+  zone: dc11a
+
+type: baremetal

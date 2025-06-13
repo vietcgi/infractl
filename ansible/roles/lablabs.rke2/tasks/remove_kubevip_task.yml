@@ -1,0 +1,12 @@
+---
+# This task will be used to remove the original kube-vip task from the main tasks
+- name: Remove original kube-vip task
+  ansible.builtin.set_fact:
+    _tasks: "{{ _tasks | default([]) + [item] }}"
+  loop: "{{ _tasks }}"
+  when: 
+    - item.name is not defined or 
+      item.name != 'Copy kube-vip manifests to the masternode' or
+      'kubevip.yml' not in (item.include_tasks | default(''))
+  vars:
+    _tasks: "{{ ansible_play_batch[0].get_tasks() | default([]) }}"

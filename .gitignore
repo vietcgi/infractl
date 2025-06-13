@@ -31,4 +31,5 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-
+#.sealedsecrets-keypair
+.sealedsecrets-keypair

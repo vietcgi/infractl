@@ -1,5 +1,22 @@
-- name: Bootstrap RKE2 Cluster
-  hosts: k8s_cluster
+- name: Deploy RKE2 HA Cluster
+  hosts: all
   become: true
+  gather_facts: true
+
+  vars:
+    # CNI and custom manifests
+    rke2_cni:
+      - cilium
+    rke2_custom_manifests:
+      - cilium.yaml
+
+    # Disable RKE2 bundled defaults
+    rke2_disable:
+      - rke2-cilium
+      - rke2-canal
+      - rke2-coredns
+      - rke2-ingress-nginx
+      - rke2-metrics-server
+      
   roles:
-    - lablabs.rke2
+    - role: lablabs.rke2

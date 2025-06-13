@@ -1,0 +1,13 @@
+---
+# Custom kube-vip task to be run after first server setup
+- name: Custom - Copy kube-vip manifests to the masternode
+  ansible.builtin.include_tasks: kubevip.yml
+  when:
+    - inventory_hostname == groups[rke2_servers_group_name].0
+    - rke2_ha_mode | bool
+    - rke2_ha_mode_kubevip | bool
+    - not rke2_ha_mode_keepalived | bool
+  tags:
+    - kube-vip
+    - ha
+    - custom

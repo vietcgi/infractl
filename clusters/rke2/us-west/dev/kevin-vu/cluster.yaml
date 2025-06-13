@@ -6,11 +6,15 @@ apps:
 cluster_api: null
 cluster_type: rke2
 env: dev
+ha: true
+ha_api_ip: 192.168.64.100
 inventory: ansible/hosts-us-west-dev-kevin-vu.ini
 kubeconfig: ~/.kube/rke2-us-west-dev-kevin-vu.yaml
 kubernetes_version: v1.33.1+rke2r1
 masters:
 - name: us-west-dev-kevin-vu-master-0
+- name: us-west-dev-kevin-vu-master-1
+- name: us-west-dev-kevin-vu-master-2
 name: kevin-vu
 os: '24.04'
 platform: rke2
@@ -21,7 +25,7 @@ server_type: multipass
 ssh_key: ~/.ssh/kevin.pem
 status:
   deleted: true
-  last_updated: '2025-05-27T17:45:53.831633'
+  last_updated: '2025-06-09T04:28:57.448655'
   provisioned: false
 tags:
   owner: kevin

@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: kube-system
 
 resources:
-  - ../../base/coredns 
+  - ../../../base/coredns
 
 patches:
   - path: patch.yaml

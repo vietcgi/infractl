@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/vietcgi/infractl.git
+    repoURL: https://github.com/vietcgi/infra.git
     targetRevision: main
-    path: apps/argocd/prod
+    path: apps/gitops/argocd/prod
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

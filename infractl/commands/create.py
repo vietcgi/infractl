@@ -1,3 +1,4 @@
+
 import os
 import time
 import subprocess
@@ -42,7 +43,9 @@ def create_cluster_cmd(
     skip_argocd: bool = typer.Option(False, help="Skip ArgoCD installation"),
     install_flux: bool = typer.Option(False, help="Install FluxCD instead of ArgoCD"),
     install_fleet: bool = typer.Option(False, help="Install Fleet GitOps instead of ArgoCD"),
-    force_refresh_ips: bool = typer.Option(False, help="Force refresh inventory IPs")
+    force_refresh_ips: bool = typer.Option(False, help="Force refresh inventory IPs"),
+    ssh_user: str = typer.Option(None, help="SSH username for cluster access"),
+    ssh_key: str = typer.Option(None, help="Path to SSH private key for cluster access")
 ):
     logging.basicConfig(level=logging.INFO, format="🔧 %(message)s")
     cluster_id = f"{region}-{env}-{name}".lower().replace("_", "-")
@@ -95,18 +98,45 @@ def create_cluster_cmd(
     if not cluster_config.get("agents"):
         raise ValueError("❌ No agents defined")
 
-    logging.info("🚧 Starting VM provisioning...")
-    provision_multipass.provision(config=cluster_config, refresh_only=force_refresh_ips)
+    # Only provision VMs if not in production with defined hosts
+    if not any([skip_argocd, install_flux, install_fleet]) and not force_refresh_ips:
+        inventory_path = cluster_config.get("inventory")
+        is_prod_with_hosts = (
+            env == 'prod' and 
+            inventory_path and 
+            os.path.exists(inventory_path) and
+            any(
+                line.strip() and not line.startswith('[') and 'ansible_host' in line
+                for line in open(inventory_path, 'r')
+                if line.strip()
+            )
+        )
+        
+        if not is_prod_with_hosts:
+            logging.info("🚧 Starting VM provisioning...")
+            provision_multipass.provision(config=cluster_config, refresh_only=force_refresh_ips)
+        else:
+            logging.info("✅ Using existing hosts from inventory, skipping VM provisioning")
 
     logging.info("🔧 Installing RKE2...")
+
+    if install_flux and install_fleet:
+        raise typer.BadParameter("❌ You can only install one GitOps engine: --install-flux OR --install-fleet, not both.")
+
+    # Set SSH environment variables if provided
+    if ssh_user:
+        os.environ["SSH_USERNAME"] = ssh_user
+    if ssh_key:
+        os.environ["SSH_PRIVATE_KEY"] = os.path.expanduser(ssh_key)
+    
     install_rke2.install(
         region=region,
         env=env,
         name=name,
         force_refresh_ips=force_refresh_ips,
         skip_argocd=skip_argocd,
-        install_flux=install_flux
+        install_flux=install_flux,
+        install_fleet=install_fleet
     )
-
 
     logging.info("✅ Cluster provisioning complete.")

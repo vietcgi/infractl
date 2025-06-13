@@ -1,0 +1,112 @@
+  apiVersion: argoproj.io/v1alpha1
+  kind: ApplicationSet
+  metadata:
+    name: system-apps-helm
+    namespace: argocd
+  spec:
+    generators:
+      - git:
+        repoURL: https://github.com/vietcgi/infra.git
+        revision: main
+        files:
+          - path: clusters/cluster-registry.json
+      - list:
+          elements:
+            - name: argocd
+              chart: argo-cd
+              version: 8.0.10
+              repoURL: https://argoproj.github.io/argo-helm
+              namespace: argocd
+              syncWave: "-4"
+            - name: cert-manager
+              chart: cert-manager
+              version: 1.13.2
+              repoURL: https://charts.jetstack.io
+              namespace: cert-manager
+              syncWave: "-3"
+            - name: longhorn
+              chart: longhorn
+              version: 1.5.3
+              repoURL: https://charts.longhorn.io
+              namespace: longhorn-system
+              syncWave: "-2"
+            - name: sealed-secrets
+              chart: sealed-secrets
+              version: 2.15.3
+              repoURL: https://bitnami-labs.github.io/sealed-secrets
+              namespace: kube-system
+              syncWave: "-1"
+            - name: cilium
+              chart: cilium
+              version: 1.17.4
+              repoURL: https://helm.cilium.io
+              namespace: kube-system
+            - name: prometheus
+              chart: kube-prometheus-stack
+              version: 56.6.2
+              repoURL: https://prometheus-community.github.io/helm-charts
+              namespace: monitoring
+            - name: loki
+              chart: loki
+              version: 5.44.0
+              repoURL: https://grafana.github.io/helm-charts
+              namespace: monitoring
+            - name: grafana
+              chart: grafana
+              version: 7.3.10
+              repoURL: https://grafana.github.io/helm-charts
+              namespace: monitoring
+            - name: nginx-ingress
+              chart: ingress-nginx
+              version: 4.9.0
+              repoURL: https://kubernetes.github.io/ingress-nginx
+              namespace: ingress-nginx
+            - name: rancher
+              chart: rancher
+              version: 2.11.2
+              kubeVersion: 1.32.0
+              repoURL: https://releases.rancher.com/server-charts/latest
+              namespace: cattle-system
+            - name: alertmanager
+              chart: alertmanager
+              version: 1.7.0
+              repoURL: https://prometheus-community.github.io/helm-charts
+              namespace: monitoring
+            - name: neuvector
+              chart: core
+              version: 2.6.6
+              repoURL: https://neuvector.github.io/neuvector-helm
+              namespace: neuvector
+    template:
+      metadata:
+        name: '{{name}}-{{env}}'
+        annotations:
+          argocd.argoproj.io/sync-wave: '{{syncWave}}'
+        labels:
+          app: '{{name}}'
+          environment: '{{env}}'
+      spec:
+      spec:
+        project: default
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: '{{namespace}}'
+        sources:
+          - chart: '{{chart}}'
+            repoURL: '{{repoURL}}'
+            targetRevision: '{{version}}'
+          - repoURL: https://github.com/vietcgi/infra.git
+            targetRevision: '{{prod}}'
+            path: apps/system/base/{{name}}
+            helm:
+            valueFiles:
+              - values.yaml
+              - values-{{env}}.yaml
+              - values-cluster-{{name}}.yaml
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
+          syncOptions:
+            - CreateNamespace=true
+        revisionHistoryLimit: 3

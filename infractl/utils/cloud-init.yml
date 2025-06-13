@@ -1,0 +1,53 @@
+#cloud-config
+ssh_pwauth: yes
+chpasswd:
+  list: |
+    root:$6$uJ/2tJJSxiD5xuRS$HBo4CZ2i274vCkEhLqky0Umt8GwnFsyrZEZRoPN4M64sDiisuKofbrpqcAsIC/YI0RlTS1u1ZmHkJH3v.ME0N1
+  expire: false
+  encrypted: true
+
+disable_root: false
+timezone: America/Virginia
+users:
+  - name: kevin
+    primary_group: users
+    groups: sudo
+    lock_passwd: false
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5/lrhHAQdTRfppzfA7Emn/hcSHobEpl6LzNFsxD9Pi0+sRT8K2shdwZ02vk+eZT3chi6Pwf5Cb82/NS7yLlq4eUxG/IKp1HxVKTdTQgA3E0HF/mmwveCnuR55iUvNNliRyWbBnY/uw5yfhVrDIyAwP+rE16M/ROlorbskJ4R6fFMr4M4o2PjAFL2KH+1lnMrtbNoovqg7/xLBhiDGhs6sNHl4E34PHICkH7Xqkh+7TCDbpjDGxMuNL5RG1zMG1fLFfJX0QIQanN2jHJU2NEMBVWB+BxNYWKWACHQevubER8KdxksBj3Newi65zx2enDoKNE6kpzi2lqPdDpUXwwVf kevin-on-kevin"
+    sudo: ALL=(ALL) NOPASSWD:ALL
+
+package_upgrade: true
+apt_reboot_if_required: true
+
+packages:
+   - jq
+   - vim
+   - wget
+   - git
+   - net-tools
+   - nload
+   - curl
+   - ca-certificates 
+   - gnupg2
+
+runcmd:
+  - wget https://apt.puppetlabs.com/puppet7-release-noble.deb 
+  - dpkg -i puppet7-release-noble.deb 
+  - apt update
+  - apt install puppet-agent -y
+  - bash /tmp/generate-puppet-config.sh
+  - |
+    hostname=$(hostname -f)
+    echo "[main]
+    certname = $(hostname).dc11.emodo.io
+    runinterval = 1h
+    server = f.dc11.emodo.io" | sudo tee -a /etc/puppetlabs/puppet/puppet.conf
+  - systemctl enable puppet
+  - systemctl restart puppet
+  
+final_message: "The system is finally up, after $UPTIME seconds"
+
+# power_state:
+#   mode: reboot

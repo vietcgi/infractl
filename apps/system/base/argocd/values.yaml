@@ -1,10 +1,13 @@
 installCRDs: true
 
 networkPolicy:
-  create: false  # managed separately if needed
+  create: false
 
 controller:
   replicas: 2
+  priorityClassName: system-cluster-critical
+  metrics:
+    enabled: true
   resources:
     requests:
       cpu: 250m
@@ -12,16 +15,10 @@ controller:
     limits:
       cpu: 1000m
       memory: 1Gi
-  metrics:
-    enabled: true
-  priorityClassName: system-cluster-critical
 
 server:
   replicas: 2
   extraArgs:
-    - --port=8080
-    - --metrics-port=8083
-    - --insecure  # for internal use, remove in production
   service:
     type: ClusterIP
     servicePortHttp: 80
@@ -49,6 +46,7 @@ server:
       port: 8080
   metrics:
     enabled: true
+  priorityClassName: system-cluster-critical
   resources:
     requests:
       cpu: 250m
@@ -59,9 +57,9 @@ server:
 
 repoServer:
   replicas: 2
+  priorityClassName: system-cluster-critical
   metrics:
     enabled: true
-  priorityClassName: system-cluster-critical
   resources:
     requests:
       cpu: 200m
@@ -72,12 +70,22 @@ repoServer:
 
 applicationSet:
   replicaCount: 1
+  priorityClassName: system-cluster-critical
   metrics:
     enabled: true
-  priorityClassName: system-cluster-critical
 
 dex:
-  enabled: false
+  enabled: true
+  config:
+    web:
+      http: 5556
+    connectors:
+      - type: github
+        id: github
+        name: GitHub
+        config:
+          clientID: 7a922c0453f09a8a41f4
+          clientSecret: 8161539d05ee26525fa18c2718941bc80ab84878
 
 notifications:
   enabled: true
@@ -86,13 +94,18 @@ notifications:
 
 redis:
   auth:
-    enabled: false  # disable to avoid secret issues
+    enabled: true
   metrics:
     enabled: true
 
 configs:
   params:
+    server.port: "8080"
+    server.metrics.port: "8083"
     applicationsetcontroller.enable.progressive.syncs: "true"
+    oidc.tls.insecure.skip.verify: "true"
+    oidc.config.insecure: "true"  # <- force insecure mode
+
   cm:
     application.instanceLabelKey: argocd.argoproj.io/instance
     exec.enabled: "true"
@@ -105,11 +118,26 @@ configs:
           - "PodMetrics"
         clusters:
           - "*"
-  rbac:
+    url: http://argocd-server.argocd.svc.cluster.local
+    oidc.config: |
+      name: GitHub
+      issuer: http://argocd-server.argocd.svc.cluster.local/api/dex
+      clientID: argo-cd
+      clientSecret: unused
+      requestedScopes: ["openid", "profile", "email", "groups"]
+
     policy.default: role:readonly
+    policy.matchMode: glob
+    scopes: '[login]'
     policy.csv: |
-      g, admin@example.com, role:admin
-      g, devops@example.com, role:edit
+      p, role:admin, applications, *, */*, allow
+      p, role:admin, clusters, get, *, allow
+      p, role:admin, repositories, *, *, allow
+      p, role:admin, projects, *, *, allow
+      p, role:admin, logs, get, *, allow
+      p, role:admin, exec, create, *, allow
+      p, role:admin, certificates, *, *, allow
+      p, role:admin, accounts, *, *, allow
   secret:
     argocdServerAdminPassword: $2b$12$oKokPM7N8GEWQALP0J.Hhe6nUdxIo4nItFuGtqlUr3jpld5OkWQn6
     extra:

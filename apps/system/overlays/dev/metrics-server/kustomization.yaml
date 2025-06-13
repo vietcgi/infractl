@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../base
+  - ../../../base/metrics-server
+  - hpa.yaml
 
-configMapGenerator:
-  - name: metrics-server-values
-    files:
-      - values.yaml
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  

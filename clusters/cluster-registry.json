@@ -1,1 +1,13 @@
-{}
+[
+    {
+      "name": "dc11a",
+      "env": "prod",
+      "fqdn": "argocd-dc11a.prod.emodo.io"
+    },
+    {
+      "name": "dev1",
+      "env": "dev",
+      "fqdn": "argocd-dev1.dev.emodo.io"
+    }
+  ]
+  

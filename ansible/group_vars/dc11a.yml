@@ -1,0 +1,62 @@
+# RKE2 Version and Token
+rke2_version: v1.33.1+rke2r1
+rke2_token: 3f04dc177a5853052c3eae3e40afb77d
+
+# Network Configuration
+# Use the high-speed bond0.100 interface for all cluster communications
+rke2_node_ip: "{{ ansible_host }}"
+rke2_node_name: "{{ inventory_hostname }}"
+
+# HA Configuration
+rke2_ha_mode: true
+rke2_api_ip: 10.10.241.253
+# kube-vip Configuration
+rke2_ha_mode_kubevip: true
+rke2_kubevip_cloud_provider_enable: true
+rke2_kubevip_svc_enable: true
+rke2_kubevip_ipvs_lb_enable: true
+rke2_kubevip_image: ghcr.io/kube-vip/kube-vip:v0.9.1
+rke2_kubevip_cloud_provider_image: ghcr.io/kube-vip/kube-vip-cloud-provider:v0.0.12
+
+# First server will bootstrap a new etcd cluster
+# Additional servers will join using the server URL
+# No need to manually specify etcd servers
+rke2_download_kubeconf: false
+
+# Network Configuration
+rke2_cni:
+- cilium
+rke2_custom_manifests:
+- cilium.yaml
+# Add additional SANs in k8s API TLS cert
+# rke2_additional_sans: ["{{ hostvars[inventory_hostname]['ansible_bond0.100']['ipv4']['address'] }}"]
+
+# Disable unused components
+rke2_disable:
+- rke2-cilium
+- rke2-canal
+- rke2-coredns
+- rke2-ingress-nginx
+- rke2-metrics-server
+
+# Server Configuration for HA Cluster
+rke2_server_options:
+  - "node-ip: {{ ansible_host }}"
+  - "advertise-address: {{ ansible_host }}"
+# Agent Configuration
+# Using bond1.100 for agents - ensure this interface exists on agent nodes
+rke2_agent_options:
+  # Network configuration
+  - "node-ip: {{ ansible_host }}"
+  - "kube-proxy-arg: ['metrics-bind-address=0.0.0.0:10249']"
+  # Connect to the VIP for the API server
+
+# HA Configuration
+# RKE2 will automatically handle etcd cluster formation
+# List of all master nodes for API server
+rke2_cluster_cidr:
+  - 10.42.0.0/16
+
+# default service network range for rke2
+rke2_service_cidr:
+  - 10.43.0.0/16

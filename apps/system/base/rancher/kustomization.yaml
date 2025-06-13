@@ -1,5 +1,6 @@
 resources:
   - namespace.yaml
+  - rbac.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -10,3 +11,4 @@ helmCharts:
     releaseName: rancher
     namespace: rancher
     valuesFile: values.yaml
+    kubeVersion: 1.32.0

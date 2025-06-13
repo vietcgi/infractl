@@ -100,27 +100,101 @@ def apply_manifest(path: Path):
 
 
 
+def create_sealed_secrets_key():
+    """Create Sealed Secrets TLS secret in kube-system namespace."""
+    key_dir = Path(".sealedsecrets-keypair")
+    if not key_dir.exists():
+        logging.warning("⚠️  Sealed Secrets key directory not found, skipping key creation")
+        return
+        
+    cert_path = key_dir / "tls.crt"
+    key_path = key_dir / "tls.key"
+    
+    if not cert_path.exists() or not key_path.exists():
+        # Try alternative filenames
+        cert_path = key_dir / "controller.crt"
+        key_path = key_dir / "controller.key"
+        if not cert_path.exists() or not key_path.exists():
+            logging.warning(f"⚠️  Sealed Secrets key files not found in {key_dir}, skipping key creation")
+            return
+    
+    logging.info("🔑 Creating Sealed Secrets TLS secret in kube-system namespace")
+    
+    # Check if secret already exists
+    result = run_command(
+        ["kubectl", "-n", "kube-system", "get", "secret", "sealed-secrets-key"],
+        check=False,
+        capture_output=True
+    )
+    
+    if result.returncode == 0:
+        logging.info("🔄 Updating existing Sealed Secrets secret")
+        run_command([
+            "kubectl", "-n", "kube-system", "delete", "secret", "sealed-secrets-key"
+        ])
+    
+    # Create the secret
+    run_command([
+        "kubectl", "-n", "kube-system", "create", "secret", "tls", "sealed-secrets-key",
+        f"--cert={cert_path}",
+        f"--key={key_path}"
+    ])
+    logging.info("✅ Sealed Secrets TLS secret created successfully")
+
+
 def bootstrap_gitops_stack(
     env: str,
     install_flux: bool = False,
     install_fleet: bool = False,
-    skip_argocd: bool = False
+    skip_argocd: bool = False,
+    kubeconfig_path: str = None
 ) -> None:
     """
     Bootstraps GitOps stack for the given environment.
-    Always applies CoreDNS first.
+    Always applies CoreDNS first, then creates Sealed Secrets key if available.
     Then installs:
       - FluxCD (and applies kustomization-system.yaml)
       - Fleet (and applies system-gitrepo.yaml)
       - or ArgoCD (and applies root-app.yaml unless skipped)
+    
+    Args:
+        env: Environment name (e.g., 'dev', 'prod')
+        install_flux: Whether to install FluxCD
+        install_fleet: Whether to install Fleet
+        skip_argocd: Whether to skip ArgoCD installation
+        kubeconfig_path: Path to the kubeconfig file (optional)
     """
     logging.info(f"🔧 Starting GitOps bootstrap for environment: {env}")
-    config.load_kube_config()
+    
+    # Set KUBECONFIG environment variable if kubeconfig_path is provided
+    if kubeconfig_path:
+        import os
+        os.environ['KUBECONFIG'] = kubeconfig_path
+    
+    # Try to load kubeconfig, but don't fail if it doesn't exist yet
+    try:
+        config.load_kube_config()
+    except config.config_exception.ConfigException as e:
+        if "No configuration found" in str(e):
+            logging.warning("⚠️  No kubeconfig found. This is normal for a new cluster. "
+                         "The kubeconfig will be created during cluster provisioning.")
+            return
+        raise
 
     try:
+        # 1. Install CoreDNS
+        logging.info("🌐 Installing CoreDNS")
         apply_kustomize(Path("apps/system/base/coredns"))
+        
+        # 2. Create Sealed Secrets TLS secret if key files exist
+        try:
+            create_sealed_secrets_key()
+        except Exception as e:
+            logging.warning(f"⚠️  Failed to create Sealed Secrets key: {e}")
+            logging.warning("This is non-fatal but may affect Sealed Secrets functionality")
+            
     except Exception as e:
-        logging.error(f"❌ Failed to bootstrap CoreDNS: {e}")
+        logging.error(f"❌ Failed during initial bootstrap: {e}")
         raise
 
     try:
@@ -185,3 +259,56 @@ def install_fleet():
         "--wait", "--timeout", "300s"
     ])
     logging.info("✅ Fleet installed successfully.")
+
+
+def create_sealed_secrets_key():
+    """
+    Create or update the Sealed Secrets TLS secret in the kube-system namespace.
+    
+    Looks for key files in .sealedsecrets-keypair/ with either:
+    - tls.crt and tls.key, or
+    - controller.crt and controller.key
+    """
+    key_dir = Path(".sealedsecrets-keypair")
+    if not key_dir.exists():
+        logging.warning("⚠️  Sealed Secrets key directory not found at .sealedsecrets-keypair/")
+        return False
+    
+    # Try both filename patterns
+    cert_path = key_dir / "tls.crt"
+    key_path = key_dir / "tls.key"
+    
+    if not cert_path.exists() or not key_path.exists():
+        cert_path = key_dir / "controller.crt"
+        key_path = key_dir / "controller.key"
+        if not cert_path.exists() or not key_path.exists():
+            logging.warning("⚠️  Could not find Sealed Secrets key files (tried .crt/.key and controller.crt/controller.key)")
+            return False
+    
+    logging.info(f"🔑 Found Sealed Secrets key files at {key_dir}")
+    
+    # Check if secret already exists
+    result = run_command(
+        ["kubectl", "-n", "kube-system", "get", "secret", "sealed-secrets-key"],
+        check=False,
+        capture_output=True
+    )
+    
+    if result.returncode == 0:
+        logging.info("🔄 Updating existing Sealed Secrets secret")
+        run_command([
+            "kubectl", "-n", "kube-system", "delete", "secret", "sealed-secrets-key"
+        ], check=False)
+    
+    # Create the secret
+    try:
+        run_command([
+            "kubectl", "-n", "kube-system", "create", "secret", "tls", "sealed-secrets-key",
+            f"--cert={cert_path}",
+            f"--key={key_path}"
+        ])
+        logging.info("✅ Sealed Secrets TLS secret created/updated in kube-system namespace")
+        return True
+    except Exception as e:
+        logging.error(f"❌ Failed to create Sealed Secrets secret: {e}")
+        return False

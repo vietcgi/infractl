@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-server-dashboard
+  namespace: grafana
+  labels:
+    grafana_dashboard: "1"
+data:
+  metrics-server.json: |
+    {
+      "__note__": "Insert your exported Grafana dashboard JSON here"
+    }
