@@ -139,7 +139,7 @@ configs:
       p, role:admin, certificates, *, *, allow
       p, role:admin, accounts, *, *, allow
   secret:
-    argocdServerAdminPassword: $2b$12$oKokPM7N8GEWQALP0J.Hhe6nUdxIo4nItFuGtqlUr3jpld5OkWQn6
+    argocdServerAdminPassword: $2b$10$VbbBjxzQFhnIeMeODMCLReuxTYeXyuGOUu1bo6TjLgUkb2GcC66K2
     extra:
       # add vault/gpg/git secrets here if needed
 
