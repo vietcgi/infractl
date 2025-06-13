@@ -86,7 +86,6 @@
           app: '{{name}}'
           environment: '{{env}}'
       spec:
-      spec:
         project: default
         destination:
           server: https://kubernetes.default.svc
