@@ -9,10 +9,10 @@ spec:
         generators:
           - files:
               files:
-                - path: catalog/clusters.json
+                - path: apps/gitops/argocd/prod/catalog/clusters.json
           - files:
               files:
-                - path: catalog/apps.json
+                - path: apps/gitops/argocd/prod/catalog/apps.json
   template:
     metadata:
       name: '{{name}}-{{clusterName}}'
