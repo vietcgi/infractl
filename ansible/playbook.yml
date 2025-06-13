@@ -4,6 +4,7 @@
   gather_facts: true
 
   vars:
+    ansible_ssh_pipelining: true
     # CNI and custom manifests
     rke2_cni:
       - cilium

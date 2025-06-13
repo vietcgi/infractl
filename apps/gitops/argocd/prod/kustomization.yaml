@@ -2,5 +2,4 @@ resources:
   - root-app.yaml
   - system-apps-helm.yaml
   - system-apps-raw.yaml
-  - secrets/sealed-okta-dc11a.yaml
 
