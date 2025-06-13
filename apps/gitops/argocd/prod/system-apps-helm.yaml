@@ -15,9 +15,10 @@ spec:
                 - path: apps/gitops/argocd/catalog/apps.json
   template:
     metadata:
-      name: '{{name}}-{{env}}'
+      name: '{{name}}-{{clusterName}}'
       labels:
         app: '{{name}}'
+        cluster: '{{clusterName}}'
         environment: '{{env}}'
     spec:
       project: default
@@ -35,7 +36,7 @@ spec:
             valueFiles:
               - values.yaml
               - values-{{env}}.yaml
-              - values-cluster-{{name}}.yaml
+              - values-cluster-{{clusterName}}.yaml
       syncPolicy:
         automated:
           prune: true
