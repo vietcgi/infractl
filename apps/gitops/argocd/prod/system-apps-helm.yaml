@@ -24,7 +24,7 @@ spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'
+        namespace: '{{namespace}}'   # ← from apps.json
       sources:
         - chart: '{{chart}}'
           repoURL: '{{repoURL}}'
