@@ -16,10 +16,9 @@ spec:
           - name: metrics-server
             namespace: metrics-server
             syncWave: "-1"
-          # longhorn is temporarily removed until its configuration is properly set up
-          # - name: longhorn
-          #   namespace: longhorn-system
-          #   syncWave: "-2"
+          - name: longhorn
+            namespace: longhorn-system
+            syncWave: "-2"
   template:
     metadata:
       name: '{{name}}-dc11a'
