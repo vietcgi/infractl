@@ -18,3 +18,7 @@ helmCharts:
     controller:
       replicas: 1
   includeCRDs: true
+
+# Enable Helm support for Kustomize
+buildOptions:
+  - enable-helm
