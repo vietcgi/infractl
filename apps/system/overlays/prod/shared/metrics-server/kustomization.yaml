@@ -6,7 +6,7 @@ resources:
   - hpa.yaml
 
 patches:
-  - path: patch-resources.yaml
+  - path: deployment-patch.yaml
     target:
       kind: Deployment
       name: metrics-server
