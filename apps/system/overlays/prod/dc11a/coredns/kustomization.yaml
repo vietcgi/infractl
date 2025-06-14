@@ -5,3 +5,9 @@ nameSuffix: -dc11a
 
 resources:
 - ../../../../base/coredns
+
+patches:
+- path: remove-clusterip-patch.yaml
+  target:
+    kind: Service
+    name: kube-dns
