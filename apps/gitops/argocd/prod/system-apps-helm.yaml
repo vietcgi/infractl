@@ -9,10 +9,10 @@ spec:
         generators:
           - files:
               files:
-                - path: catalog/clusters.json
+                - path: apps/gitops/argocd/prod/catalog/clusters.json
           - files:
               files:
-                - path: catalog/apps.json
+                - path: apps/gitops/argocd/prod/catalog/apps.json
   template:
     metadata:
       name: '{{name}}-{{clusterName}}'
@@ -24,7 +24,7 @@ spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'   # ← from apps.json
+        namespace: '{{namespace}}'
       sources:
         - chart: '{{chart}}'
           repoURL: '{{repoURL}}'

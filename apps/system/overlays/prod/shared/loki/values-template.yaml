@@ -1,0 +1,8 @@
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+resources:
+  limits:
+    cpu: 300m
+    memory: 512Mi

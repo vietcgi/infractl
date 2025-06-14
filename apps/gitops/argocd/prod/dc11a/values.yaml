@@ -1,0 +1,8 @@
+server:
+  ingress:
+    hosts:
+    - argocd.dc11a.prod.dc11.emodo.io
+    tls:
+    - secretName: argocd-tls
+      hosts:
+      - argocd.dc11a.prod.dc11.emodo.io
