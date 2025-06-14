@@ -7,12 +7,40 @@ spec:
   generators:
     - matrix:
         generators:
-          - files:
-              files:
-                - path: apps/gitops/argocd/prod/catalog/clusters.json
-          - files:
-              files:
-                - path: apps/gitops/argocd/prod/catalog/apps.json
+          - list:
+              elements:
+                - clusterName: dc11a
+                  env: prod
+                  fqdn: argocd-dc11a.prod.emodo.io
+                - clusterName: dc11b
+                  env: prod
+                  fqdn: argocd-dc11b.prod.emodo.io
+          - list:
+              elements:
+                - name: argocd
+                  chart: argo-cd
+                  version: 8.0.10
+                  repoURL: https://argoproj.github.io/argo-helm
+                  namespace: argocd
+                  syncWave: "-4"
+                - name: cert-manager
+                  chart: cert-manager
+                  version: 1.13.2
+                  repoURL: https://charts.jetstack.io
+                  namespace: cert-manager
+                  syncWave: "-3"
+                - name: longhorn
+                  chart: longhorn
+                  version: 1.5.3
+                  repoURL: https://charts.longhorn.io
+                  namespace: longhorn-system
+                  syncWave: "-2"
+                - name: metrics-server
+                  chart: metrics-server
+                  version: 3.11.0
+                  repoURL: https://kubernetes-sigs.github.io/metrics-server/
+                  namespace: kube-system
+                  syncWave: "-1"
   template:
     metadata:
       name: '{{name}}-{{clusterName}}'
