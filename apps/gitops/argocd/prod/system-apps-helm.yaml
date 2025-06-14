@@ -44,3 +44,11 @@ spec:
         syncOptions:
           - CreateNamespace=true
       revisionHistoryLimit: 3
+      ignoreDifferences:
+        - group: ""
+          kind: Service
+          name: kube-dns-dc11a
+          namespace: kube-system
+          jsonPointers:
+            - /spec/clusterIP
+            - /spec/clusterIPs
