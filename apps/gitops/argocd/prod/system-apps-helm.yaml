@@ -5,63 +5,38 @@ metadata:
   namespace: argocd
 spec:
   generators:
-    - matrix:
-        generators:
-          - list:
-              elements:
-                - clusterName: dc11a
-                  env: prod
-                  fqdn: argocd-dc11a.prod.emodo.io
-          - list:
-              elements:
-                - name: argocd
-                  chart: argo-cd
-                  version: 8.0.10
-                  repoURL: https://argoproj.github.io/argo-helm
-                  namespace: argocd
-                  syncWave: "-4"
-                - name: cert-manager
-                  chart: cert-manager
-                  version: 1.13.2
-                  repoURL: https://charts.jetstack.io
-                  namespace: cert-manager
-                  syncWave: "-3"
-                - name: longhorn
-                  chart: longhorn
-                  version: 1.5.3
-                  repoURL: https://charts.longhorn.io
-                  namespace: longhorn-system
-                  syncWave: "-2"
-                - name: metrics-server
-                  chart: metrics-server
-                  version: 3.11.0
-                  repoURL: https://kubernetes-sigs.github.io/metrics-server/
-                  namespace: kube-system
-                  syncWave: "-1"
+    - list:
+        elements:
+          - name: argocd
+            namespace: argocd
+            syncWave: "-4"
+          - name: cert-manager
+            namespace: cert-manager
+            syncWave: "-3"
+          - name: longhorn
+            namespace: longhorn-system
+            syncWave: "-2"
+          - name: metrics-server
+            namespace: kube-system
+            syncWave: "-1"
   template:
     metadata:
-      name: '{{name}}-{{clusterName}}'
+      name: '{{name}}-dc11a'
       labels:
         app: '{{name}}'
-        cluster: '{{clusterName}}'
-        environment: '{{env}}'
+        cluster: 'dc11a'
+        environment: 'prod'
     spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'
-      sources:
-        - chart: '{{chart}}'
-          repoURL: '{{repoURL}}'
-          targetRevision: '{{version}}'
-        - repoURL: https://github.com/vietcgi/infra.git
-          targetRevision: main
-          path: apps/system/base/{{name}}
-          kustomize:
-            files:
-              - values.yaml
-              - values-{{env}}.yaml
-              - values-cluster-{{clusterName}}.yaml
+      source:
+        repoURL: https://github.com/vietcgi/infra.git
+        targetRevision: main
+        path: apps/system/overlays/prod/dc11a/{{name}}
+        kustomize:
+          nameSuffix: -dc11a
       syncPolicy:
         automated:
           prune: true
