@@ -4,9 +4,6 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - serviceaccount.yaml
-  - clusterrolebinding.yaml
-  - rolebinding.yaml
-  - clusterrole.yaml
   - service.yaml
   - apiservice.yaml
-  - rbac-extra.yaml  # Additional RBAC permissions for metrics-server
+  - rbac.yaml  # Consolidated RBAC configuration for metrics-server
