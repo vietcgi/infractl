@@ -9,3 +9,4 @@ resources:
   - clusterrole.yaml
   - service.yaml
   - apiservice.yaml
+  - rbac-extra.yaml  # Additional RBAC permissions for metrics-server
