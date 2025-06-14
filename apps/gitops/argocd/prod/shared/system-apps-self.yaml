@@ -33,3 +33,10 @@ spec:
         - group: ""
           kind: Secret
           name: argocd-secret
+        - group: ""
+          kind: Namespace
+          name: argocd
+          jsonPointers:
+          - /metadata/labels
+          - /metadata/annotations
+          - /metadata/finalizers
