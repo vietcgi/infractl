@@ -22,6 +22,7 @@ spec:
         path: apps/system/overlays/prod/shared/argocd
         kustomize:
           enableHelm: true  # Enable Helm support for Kustomize
+          buildOptions: ["--enable-helm"]  # Explicitly enable Helm for Kustomize build
       destination:
         server: https://kubernetes.default.svc
         namespace: argocd
