@@ -13,13 +13,13 @@ spec:
           - name: cert-manager
             namespace: cert-manager
             syncWave: "-3"
-          # longhorn and metrics-server are temporarily removed until their configurations are properly set up
+          - name: metrics-server
+            namespace: metrics-server
+            syncWave: "-1"
+          # longhorn is temporarily removed until its configuration is properly set up
           # - name: longhorn
           #   namespace: longhorn-system
           #   syncWave: "-2"
-          # - name: metrics-server
-          #   namespace: kube-system
-          #   syncWave: "-1"
   template:
     metadata:
       name: '{{name}}-dc11a'
