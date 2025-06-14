@@ -4,6 +4,8 @@ kind: Kustomization
 # Reference the base Grafana configuration
 resources:
   - ../../../../base/grafana
+  - hostpath-patch.yaml
+  - manual-storageclass.yaml
 
 # Common labels for all resources
 commonLabels:
