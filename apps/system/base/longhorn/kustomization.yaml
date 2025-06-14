@@ -1,9 +1,59 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Include all the organized manifests
 resources:
-  - namespace.yaml
-  # Add other Longhorn resources here as needed
+  # Common resources (namespaces, configmaps, etc.)
+  - common/namespace_longhorn-system.yaml
+  - common/priorityclass_longhorn-critical.yaml
+  - common/configmap_longhorn-default-setting.yaml
+  - common/configmap_longhorn-storageclass.yaml
+  - common/service_longhorn-backend.yaml
+  - common/service_longhorn-frontend.yaml
+  - common/service_longhorn-conversion-webhook.yaml
+  - common/service_longhorn-admission-webhook.yaml
+  - common/service_longhorn-recovery-backend.yaml
+  - common/service_longhorn-engine-manager.yaml
+  - common/service_longhorn-replica-manager.yaml
+
+  # CRDs
+  - crds/customresourcedefinition_backingimagedatasources.longhorn.io.yaml
+  - crds/customresourcedefinition_backingimagemanagers.longhorn.io.yaml
+  - crds/customresourcedefinition_backingimages.longhorn.io.yaml
+  - crds/customresourcedefinition_backupbackingimages.longhorn.io.yaml
+  - crds/customresourcedefinition_backups.longhorn.io.yaml
+  - crds/customresourcedefinition_backuptargets.longhorn.io.yaml
+  - crds/customresourcedefinition_backupvolumes.longhorn.io.yaml
+  - crds/customresourcedefinition_engineimages.longhorn.io.yaml
+  - crds/customresourcedefinition_engines.longhorn.io.yaml
+  - crds/customresourcedefinition_instancemanagers.longhorn.io.yaml
+  - crds/customresourcedefinition_nodes.longhorn.io.yaml
+  - crds/customresourcedefinition_orphans.longhorn.io.yaml
+  - crds/customresourcedefinition_recurringjobs.longhorn.io.yaml
+  - crds/customresourcedefinition_replicas.longhorn.io.yaml
+  - crds/customresourcedefinition_settings.longhorn.io.yaml
+  - crds/customresourcedefinition_sharemanagers.longhorn.io.yaml
+  - crds/customresourcedefinition_snapshots.longhorn.io.yaml
+  - crds/customresourcedefinition_supportbundles.longhorn.io.yaml
+  - crds/customresourcedefinition_systembackups.longhorn.io.yaml
+  - crds/customresourcedefinition_systemrestores.longhorn.io.yaml
+  - crds/customresourcedefinition_volumes.longhorn.io.yaml
+  - crds/customresourcedefinition_volumeattachments.longhorn.io.yaml
+
+  # RBAC resources
+  - rbac/clusterrole_longhorn-role.yaml
+  - rbac/clusterrolebinding_longhorn-bind.yaml
+  - rbac/clusterrolebinding_longhorn-support-bundle.yaml
+  - rbac/serviceaccount_longhorn-service-account.yaml
+  - rbac/serviceaccount_longhorn-ui-service-account.yaml
+  - rbac/serviceaccount_longhorn-support-bundle.yaml
+
+  # Manager resources
+  - manager/daemonset_longhorn-manager.yaml
+  - manager/deployment_longhorn-driver-deployer.yaml
+
+  # UI resources
+  - ui/deployment_longhorn-ui.yaml
 
 # Common labels to apply to all resources
 commonLabels:
@@ -12,6 +62,7 @@ commonLabels:
   app.kubernetes.io/instance: longhorn
   app.kubernetes.io/component: storage
   app.kubernetes.io/part-of: longhorn
+  app.kubernetes.io/managed-by: kustomize
 
 # Name prefix for all resources
 namePrefix: longhorn-
