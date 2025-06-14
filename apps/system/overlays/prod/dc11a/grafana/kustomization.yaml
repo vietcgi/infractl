@@ -6,6 +6,7 @@ resources:
   - ../../../../base/grafana
   - hostpath-patch.yaml
   - manual-storageclass.yaml
+  - pvc-patch.yaml
 
 # Common labels for all resources
 commonLabels:
