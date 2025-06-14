@@ -1,24 +1,18 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Name suffix for all resources
 nameSuffix: -dc11a
 
+# Include the base Longhorn manifests
 resources:
-- ../../../../base/longhorn
+  - ../../../../base/longhorn
 
-helmCharts:
-- name: longhorn
-  releaseName: longhorn
-  repo: https://charts.longhorn.io
-  version: 1.6.0
-  namespace: longhorn-system
-  valuesFile: ../../../../base/longhorn/values.yaml
-  valuesMerge: override
-  valuesInline:
-    controller:
-      replicas: 1
-  includeCRDs: true
+# Common labels to apply to all resources
+commonLabels:
+  app.kubernetes.io/instance: longhorn-dc11a
+  app.kubernetes.io/part-of: longhorn
+  app.kubernetes.io/managed-by: kustomize
 
-# Enable Helm support for Kustomize
-buildOptions:
-  - enable-helm
+# Namespace to deploy all resources
+namespace: longhorn-system

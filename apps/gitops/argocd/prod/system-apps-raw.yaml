@@ -7,10 +7,6 @@ spec:
   generators:
     - list:
         elements:
-          - name: coredns
-            namespace: kube-system
-            syncWave: "-5"
-            type: raw
           - name: cert-manager-crds
             namespace: cert-manager
             syncWave: "-4"
@@ -42,7 +38,7 @@ spec:
         namespace: '{{namespace}}'
       source:
         repoURL: https://github.com/vietcgi/infra.git
-        targetRevision: prod
+        targetRevision: main
         path: apps/system/overlays/prod/{{name}}
       syncPolicy:
         automated:

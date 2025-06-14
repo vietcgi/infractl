@@ -44,8 +44,7 @@ spec:
         repoURL: https://github.com/vietcgi/infractl.git
         targetRevision: dev
         path: apps/system/overlays/dev/{{name}}
-        kustomize:
-          buildOptions: --enable-helm
+        kustomize: {}
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{namespace}}'

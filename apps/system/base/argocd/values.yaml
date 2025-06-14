@@ -109,7 +109,6 @@ configs:
   cm:
     application.instanceLabelKey: argocd.argoproj.io/instance
     exec.enabled: "true"
-    kustomize.buildOptions: --enable-helm
     timeout.reconciliation: 60s
     resource.exclusions: |
       - apiGroups:

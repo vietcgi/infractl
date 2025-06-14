@@ -19,6 +19,9 @@ spec:
           - name: longhorn
             namespace: longhorn-system
             syncWave: "-2"
+          - name: coredns
+            namespace: kube-system
+            syncWave: "0"
   template:
     metadata:
       name: '{{name}}-dc11a'

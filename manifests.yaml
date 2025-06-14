@@ -151,7 +151,6 @@ data:
   application.instanceLabelKey: argocd.argoproj.io/instance
   application.sync.impersonation.enabled: "false"
   exec.enabled: "true"
-  kustomize.buildOptions: --enable-helm
   oidc.config: |
     name: GitHub
     issuer: http://argocd-server.argocd.svc.cluster.local/api/dex
