@@ -12,9 +12,6 @@ spec:
                 - clusterName: dc11a
                   env: prod
                   fqdn: argocd-dc11a.prod.emodo.io
-                - clusterName: dc11b
-                  env: prod
-                  fqdn: argocd-dc11b.prod.emodo.io
           - list:
               elements:
                 - name: argocd
@@ -60,8 +57,8 @@ spec:
         - repoURL: https://github.com/vietcgi/infra.git
           targetRevision: main
           path: apps/system/base/{{name}}
-          helm:
-            valueFiles:
+          kustomize:
+            files:
               - values.yaml
               - values-{{env}}.yaml
               - values-cluster-{{clusterName}}.yaml
