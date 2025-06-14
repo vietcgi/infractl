@@ -7,6 +7,7 @@ nameSuffix: -dc11a
 # Include the base Longhorn manifests
 resources:
   - ../../../../base/longhorn
+  - webhook-patch.yaml
 
 # Common labels to apply to all resources
 commonLabels:
@@ -16,3 +17,20 @@ commonLabels:
 
 # Namespace to deploy all resources
 namespace: longhorn-system
+
+# Patch the webhook configurations to use the correct service name
+patches:
+  - target:
+      kind: ValidatingWebhookConfiguration
+      name: longhorn-admission-webhook
+    patch: |-
+      - op: replace
+        path: /webhooks/0/clientConfig/service/name
+        value: longhorn-longhorn-admission-webhook-dc11a
+  - target:
+      kind: MutatingWebhookConfiguration
+      name: longhorn-conversion-webhook
+    patch: |-
+      - op: replace
+        path: /webhooks/0/clientConfig/service/name
+        value: longhorn-longhorn-conversion-webhook-dc11a
