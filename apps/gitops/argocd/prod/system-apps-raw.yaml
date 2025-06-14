@@ -39,7 +39,7 @@ spec:
       source:
         repoURL: https://github.com/vietcgi/infra.git
         targetRevision: main
-        path: apps/system/overlays/prod/{{name}}
+        path: apps/system/overlays/prod/shared/{{name}}
       syncPolicy:
         automated:
           prune: true
