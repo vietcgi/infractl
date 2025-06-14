@@ -11,3 +11,7 @@ patches:
   target:
     kind: Service
     name: kube-dns
+- path: application-patch.yaml
+  target:
+    kind: Application
+    name: coredns-dc11a
