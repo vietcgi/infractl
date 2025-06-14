@@ -1,22 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Base resources
 resources:
   - ../../../../base/metrics-server
   - hpa.yaml
 
 # Exclude APIService and Namespace as they are managed by metrics-server-dc11a
-resources:
-  - ../../../../base/metrics-server/serviceaccount.yaml
-  - ../../../../base/metrics-server/service.yaml
-  - ../../../../base/metrics-server/deployment.yaml
-  - ../../../../base/metrics-server/clusterrole.yaml
-  - ../../../../base/metrics-server/clusterrolebinding.yaml
-  - ../../../../base/metrics-server/rolebinding.yaml
-  - hpa.yaml
-
 patches:
   - path: deployment-patch.yaml
     target:
       kind: Deployment
       name: metrics-server
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/name: metrics-server
+  app.kubernetes.io/instance: metrics-server-prod
+  app.kubernetes.io/part-of: kube-system
