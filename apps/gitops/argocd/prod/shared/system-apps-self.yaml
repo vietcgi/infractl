@@ -20,9 +20,6 @@ spec:
         repoURL: https://github.com/vietcgi/infra.git
         targetRevision: HEAD
         path: apps/system/overlays/prod/{{name}}/argocd
-        kustomize:
-          enableHelm: true  # Enable Helm support for Kustomize
-          buildOptions: ["--enable-helm"]  # Explicitly enable Helm for Kustomize build
       destination:
         server: https://kubernetes.default.svc
         namespace: argocd
