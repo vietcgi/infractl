@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+spec:
+  source:
+    helm:
+      values: |
+        server:
+          replicas: 3
+          ingress:
+            enabled: true
+            hosts:
+              - argocd.dc11a.prod.emodo.io
+            tls:
+              - secretName: argocd-tls
+                hosts:
+                  - argocd.dc11a.prod.emodo.io 

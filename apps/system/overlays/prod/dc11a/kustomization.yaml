@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../../base/argocd
+  # - ../../../../base/monitoring  # Uncomment/add as needed
+  - ../../../../base/argocd-app.yaml
+
+components:
+  - ../../../../components/argocd/cluster
+
+configMapGenerator:
+  - name: cluster-config
+    literals:
+      - CLUSTER_NAME=dc11a
+      - ENVIRONMENT=prod
+      - INGRESS_HOST=argocd.dc11a.prod.emodo.io
+
+labels:
+  - pairs:
+      cluster: dc11a
+      environment: prod
+
+patchesStrategicMerge:
+  - argocd-values-patch.yaml 

@@ -98,9 +98,9 @@ spec:
     spec:
       project: default
       source:
-        repoURL: '{{repoURL}}'
+        repoURL: https://github.com/vietcgi/infra.git
         chart: '{{chart}}'
-        targetRevision: '{{version}}'
+        targetRevision: main
         helm:
           valueFiles:
             - apps/system/base/{{name}}/values.yaml
