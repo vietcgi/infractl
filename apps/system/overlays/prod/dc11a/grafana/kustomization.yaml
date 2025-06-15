@@ -1,9 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Reference the base Grafana configuration but exclude the PVC
+# Disable load restrictions to allow referencing files outside the overlay
+configurations:
+  - kustomizeconfig.yaml
+
+# Reference the base Grafana configuration
 resources:
-  - ../../../../base/grafana
+  - ../../../../base/grafana/namespace.yaml
+  - ../../../../base/grafana/rbac.yaml
+  - ../../../../base/grafana/service.yaml
+  - ../../../../base/grafana/serviceaccount.yaml
+  - ../../../../base/grafana/deployment.yaml
+  - ../../../../base/grafana/hpa.yaml
+  - ../../../../base/grafana/configmap.yaml
+  # Intentionally excluding the pvc.yaml file
 
 # Remove the PVC resource
 patches:
@@ -19,16 +30,17 @@ patches:
       kind: Deployment
       name: grafana
 
-# Remove the PVC resource from the base resources
-resources:
-  - ../../../../base/grafana/namespace.yaml
-  - ../../../../base/grafana/rbac.yaml
-  - ../../../../base/grafana/service.yaml
-  - ../../../../base/grafana/serviceaccount.yaml
-  - ../../../../base/grafana/deployment.yaml
-  - ../../../../base/grafana/hpa.yaml
-  - ../../../../base/grafana/configmap.yaml
-  # Intentionally excluding the pvc.yaml file
+# Patch the HPA to adjust scaling for dc11a
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: grafana
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 3
 
 # Common labels for all resources
 commonLabels:

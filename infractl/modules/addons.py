@@ -30,18 +30,30 @@ def find_values_file(component: str, env: str, cluster: Optional[str] = None) ->
     # Try cluster-specific values first (for any environment)
     if cluster:
         cluster_values = Path(f"apps/system/overlays/{env}/{cluster}/{component}/values.yaml")
+        logging.debug(f"Checking for cluster values at: {cluster_values.absolute()}")
         if cluster_values.exists():
+            logging.debug(f"Found cluster values at: {cluster_values}")
             return cluster_values
+        else:
+            logging.debug(f"Cluster values not found at: {cluster_values.absolute()}")
     
     # Try environment-specific values
     env_values = Path(f"apps/system/overlays/{env}/{component}/values.yaml")
+    logging.debug(f"Checking for environment values at: {env_values.absolute()}")
     if env_values.exists():
+        logging.debug(f"Found environment values at: {env_values}")
         return env_values
+    else:
+        logging.debug(f"Environment values not found at: {env_values.absolute()}")
     
     # Fall back to base values
     base_values = Path(f"apps/system/base/{component}/values.yaml")
+    logging.debug(f"Checking for base values at: {base_values.absolute()}")
     if base_values.exists():
+        logging.debug(f"Found base values at: {base_values}")
         return base_values
+    else:
+        logging.debug(f"Base values not found at: {base_values.absolute()}")
     
     raise FileNotFoundError(
         f"No values file found for {component} in env={env}, cluster={cluster}. "
@@ -113,25 +125,63 @@ def install_helm_chart(
     chart_name: str,
     namespace: str,
     values_file: Path | None = None,
+    additional_values: list[Path] | None = None,
     timeout: str = "300s"
 ):
+    """Install or upgrade a Helm chart with support for multiple values files.
+    
+    Args:
+        release_name: Name of the Helm release
+        repo_name: Name of the Helm repository
+        repo_url: URL of the Helm repository
+        chart_name: Name of the chart to install
+        namespace: Target namespace
+        values_file: Primary values file (required)
+        additional_values: List of additional values files to merge
+        timeout: Timeout for the Helm operation
+    """
+    # Validate primary values file
     if values_file and not values_file.exists():
-        raise FileNotFoundError(f"Missing Helm values file: {values_file}")
+        raise FileNotFoundError(f"Primary Helm values file not found: {values_file}")
+    
+    # Validate additional values files if provided
+    additional = additional_values or []
+    for vf in additional:
+        if not vf.exists():
+            raise FileNotFoundError(f"Additional Helm values file not found: {vf}")
 
     logging.info(f"🚀 Installing Helm release '{release_name}' in namespace '{namespace}'")
+    logging.debug(f"Using values files: {[str(vf) for vf in [values_file] + additional if vf]}")
 
-    run_command(["helm", "repo", "add", repo_name, repo_url])
+    # Add repo and update
+    run_command(["helm", "repo", "add", "--force-update", repo_name, repo_url])
     run_command(["helm", "repo", "update"])
 
+    # Prepare base command
     cmd = [
         "helm", "upgrade", "--install", release_name, f"{repo_name}/{chart_name}",
         "--namespace", namespace, "--create-namespace",
-        "--wait", "--timeout", timeout
+        "--wait", "--timeout", timeout,
+        "--atomic"  # Automatically rollback on failure
     ]
+    
+    # Add primary values file
     if values_file:
         cmd += ["--values", str(values_file)]
+    
+    # Add additional values files
+    for vf in additional:
+        if vf and vf.exists():
+            cmd += ["--values", str(vf)]
 
-    run_command(cmd)
+    try:
+        run_command(cmd)
+        logging.info(f"✅ Successfully installed/upgraded {release_name}")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"❌ Failed to install/upgrade {release_name}: {e}")
+        if "release: already exists" in (e.stderr or ""):
+            logging.info("ℹ️  Release already exists. Consider using --force-update if needed.")
+        raise
     logging.info(f"✅ Helm release '{release_name}' installed successfully.")
 
 def apply_manifest(path: Path):
@@ -289,34 +339,55 @@ def bootstrap_gitops_stack(
         # Install ArgoCD with appropriate values file
         logging.info("🚀 Installing ArgoCD...")
         
+        # Prepare values files in order of precedence
+        values_files = []
+        
         try:
-            # Find the most specific values file for this environment and cluster
-            values_file = find_values_file("argocd", env, cluster)
-            logging.info(f"📋 Using values file: {values_file}")
+            # 1. Base values (required)
+            base_values = Path("apps/system/base/argocd/values.yaml")
+            if not base_values.exists():
+                raise FileNotFoundError(f"Base values file not found: {base_values}")
+            values_files.append(base_values)
             
+            # 2. Environment-specific values (optional)
+            env_values = Path(f"apps/system/overlays/{env}/argocd/values.yaml")
+            if env_values.exists():
+                values_files.append(env_values)
+            
+            # 3. Cluster-specific values (optional)
+            if cluster:
+                cluster_values = Path(f"apps/system/overlays/{env}/{cluster}/argocd/values.yaml")
+                if cluster_values.exists():
+                    values_files.append(cluster_values)
+            
+            logging.info(f"📋 Using values files: {[str(f) for f in values_files]}")
+            
+            # Install with all values files
             install_helm_chart(
                 release_name="argocd",
                 repo_name="argo",
                 repo_url="https://argoproj.github.io/argo-helm",
                 chart_name="argo-cd",
                 namespace="argocd",
-                values_file=values_file
+                values_file=values_files[0],  # First file as primary
+                additional_values=values_files[1:]  # Additional files to merge
             )
             logging.info("✅ ArgoCD installed successfully.")
             
-        except FileNotFoundError as e:
-            logging.error(f"❌ Failed to find values file for ArgoCD: {e}")
-            logging.error("Using default values, but this may not be what you want.")
-            
-            # Fall back to default installation without values file
-            install_helm_chart(
-                release_name="argocd",
-                repo_name="argo",
-                repo_url="https://argoproj.github.io/argo-helm",
-                chart_name="argo-cd",
-                namespace="argocd"
-            )
-            logging.info("✅ ArgoCD installed with default values.")
+        except Exception as e:
+            logging.error(f"❌ Failed to install ArgoCD: {e}")
+            if not values_files:
+                logging.error("No values files found. Using default installation.")
+                install_helm_chart(
+                    release_name="argocd",
+                    repo_name="argo",
+                    repo_url="https://argoproj.github.io/argo-helm",
+                    chart_name="argo-cd",
+                    namespace="argocd"
+                )
+                logging.info("✅ ArgoCD installed with default values.")
+            else:
+                raise
 
         # Wait for ArgoCD to be ready
         logging.info("⏳ Waiting for ArgoCD to be ready...")
