@@ -34,23 +34,8 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/grafana
           name: grafana-storage
-        - mountPath: /etc/grafana/grafana.ini
-          name: grafana-config
-          readOnly: true
-          subPath: grafana.ini
-        - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
-          name: grafana-config
-          subPath: datasources.yaml
       
-      # Update volumes to use emptyDir
+      # Define volumes
       volumes:
       - name: grafana-storage
         emptyDir: {}
-      - name: grafana-config
-        configMap:
-          name: grafana-config
-          items:
-          - key: grafana.ini
-            path: grafana.ini
-          - key: datasources.yaml
-            path: datasources.yaml
