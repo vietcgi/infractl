@@ -1,12 +1,19 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Reference the base Grafana configuration
+# Reference the base Grafana configuration but exclude the PVC
 resources:
   - ../../../../base/grafana
 
-# Patches for the Grafana deployment
+# Exclude the PVC resource from the base
 patches:
+  - target:
+      kind: PersistentVolumeClaim
+      name: grafana-storage
+    patch: |-
+      $patch: delete
+
+# Patches for the Grafana deployment
   - path: json-patch.yaml
     target:
       kind: Deployment
