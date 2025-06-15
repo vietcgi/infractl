@@ -15,7 +15,7 @@ spec:
   source:
     repoURL: https://github.com/vietcgi/infra.git
     targetRevision: main
-    path: apps/gitops/argocd/prod/dc11a
+    path: apps/system/overlays/prod/dc11a
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
