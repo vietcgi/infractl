@@ -5,8 +5,9 @@ metadata:
   namespace: metrics-server
   labels:
     k8s-app: metrics-server
+    app.kubernetes.io/name: metrics-server
+    app.kubernetes.io/part-of: kube-system
 spec:
-  replicas: 1
   selector:
     matchLabels:
       k8s-app: metrics-server
@@ -16,36 +17,55 @@ spec:
         k8s-app: metrics-server
     spec:
       serviceAccountName: metrics-server
+      priorityClassName: system-cluster-critical
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       containers:
         - name: metrics-server
           image: registry.k8s.io/metrics-server/metrics-server:v0.7.2
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: https
-              containerPort: 443
+              containerPort: 4443
               protocol: TCP
           args:
             - --kubelet-insecure-tls
-            - --kubelet-preferred-address-types=InternalIP,Hostname
+            - --kubelet-preferred-address-types=InternalIP,Hostname,InternalDNS,ExternalDNS,ExternalIP
             - --metric-resolution=15s
             - --cert-dir=/tmp
+            - --secure-port=4443
+            - --v=2
+          volumeMounts:
+            - name: tmp-dir
+              mountPath: /tmp
           resources:
             requests:
-              cpu: 50m
-              memory: 100Mi
-            limits:
-              cpu: 250m
+              cpu: 100m
               memory: 200Mi
+            limits:
+              cpu: 200m
+              memory: 500Mi
           livenessProbe:
             httpGet:
               path: /livez
-              port: 443
+              port: https
               scheme: HTTPS
             initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 6
-
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /readyz

@@ -1,11 +1,73 @@
-
 import subprocess
 import logging
 from pathlib import Path
 import yaml
 from kubernetes import config, client
 from kubernetes.dynamic import DynamicClient
+from typing import Optional, Dict, Any, List, Union, Tuple
 
+
+def find_values_file(component: str, env: str, cluster: Optional[str] = None) -> Path:
+    """
+    Find the most specific values file for a component based on environment and cluster.
+    
+    Search order:
+    1. Cluster-specific values: system/overlays/{env}/{cluster}/{component}/values.yaml
+    2. Environment values: system/overlays/{env}/{component}/values.yaml
+    3. Base values: system/base/{component}/values.yaml
+    
+    Args:
+        component: The component name (e.g., 'argocd')
+        env: The environment (e.g., 'prod', 'dev')
+        cluster: Optional cluster name (e.g., 'dc11a')
+        
+    Returns:
+        Path to the most specific values file found
+        
+    Raises:
+        FileNotFoundError: If no values file is found
+    """
+    # Try cluster-specific values first (for any environment)
+    if cluster:
+        cluster_values = Path(f"apps/system/overlays/{env}/{cluster}/{component}/values.yaml")
+        if cluster_values.exists():
+            return cluster_values
+    
+    # Try environment-specific values
+    env_values = Path(f"apps/system/overlays/{env}/{component}/values.yaml")
+    if env_values.exists():
+        return env_values
+    
+    # Fall back to base values
+    base_values = Path(f"apps/system/base/{component}/values.yaml")
+    if base_values.exists():
+        return base_values
+    
+    raise FileNotFoundError(
+        f"No values file found for {component} in env={env}, cluster={cluster}. "
+        f"Tried: {[str(p) for p in [cluster_values, env_values, base_values] if 'p' in locals()]}"
+    )
+
+
+def merge_values(*values_files: Path) -> Dict[str, Any]:
+    """Merge multiple YAML values files, with later files taking precedence."""
+    result = {}
+    for file in values_files:
+        if file.exists():
+            with open(file) as f:
+                file_values = yaml.safe_load(f) or {}
+                deep_merge(result, file_values)
+    return result
+
+
+def deep_merge(base: Dict[str, Any], update: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively merge two dictionaries, with update taking precedence."""
+    for key, value in update.items():
+        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            base[key] = deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
 
 
 def run_command(
@@ -147,7 +209,8 @@ def bootstrap_gitops_stack(
     install_flux: bool = False,
     install_fleet: bool = False,
     skip_argocd: bool = False,
-    kubeconfig_path: str = None
+    kubeconfig_path: str = None,
+    cluster: str = None
 ) -> None:
     """
     Bootstraps GitOps stack for the given environment.
@@ -214,27 +277,120 @@ def bootstrap_gitops_stack(
             logging.info("⚠️ Skipping ArgoCD installation as requested.")
             return
 
-        install_helm_chart(
-            release_name="argocd",
-            repo_name="argo",
-            repo_url="https://argoproj.github.io/argo-helm",
-            chart_name="argo-cd",
-            namespace="argocd",
-            values_file=Path("apps/system/base/argocd/values.yaml")
-        )
-    except Exception as e:
-        logging.error(f"❌ GitOps install failed: {e}")
-        raise
+        # Install ArgoCD with appropriate values file
+        logging.info("🚀 Installing ArgoCD...")
+        
+        try:
+            # Find the most specific values file for this environment and cluster
+            values_file = find_values_file("argocd", env, cluster)
+            logging.info(f"📋 Using values file: {values_file}")
+            
+            install_helm_chart(
+                release_name="argocd",
+                repo_name="argo",
+                repo_url="https://argoproj.github.io/argo-helm",
+                chart_name="argo-cd",
+                namespace="argocd",
+                values_file=values_file
+            )
+            logging.info("✅ ArgoCD installed successfully.")
+            
+        except FileNotFoundError as e:
+            logging.error(f"❌ Failed to find values file for ArgoCD: {e}")
+            logging.error("Using default values, but this may not be what you want.")
+            
+            # Fall back to default installation without values file
+            install_helm_chart(
+                release_name="argocd",
+                repo_name="argo",
+                repo_url="https://argoproj.github.io/argo-helm",
+                chart_name="argo-cd",
+                namespace="argocd"
+            )
+            logging.info("✅ ArgoCD installed with default values.")
 
-    root_app = Path(f"apps/gitops/argocd/{env}/root-app.yaml")
-    if not root_app.exists():
-        raise FileNotFoundError(f"❌ root-app.yaml not found: {root_app}")
+        # Wait for ArgoCD to be ready
+        logging.info("⏳ Waiting for ArgoCD to be ready...")
+        run_command([
+            "kubectl", "wait", "--for=condition=available", "deployment/argocd-server",
+            "-n", "argocd", "--timeout=300s"
+        ])
 
-    try:
-        logging.info(f"📂 Applying ArgoCD root app for '{env}'")
-        run_command(["kubectl", "apply", "-f", str(root_app)])
+        # Apply the ArgoCD Application CRD for self-management
+        logging.info(f"🔄 Setting up ArgoCD self-management for environment: {env}...")
+        
+        # First, apply the root application that points to the correct environment and cluster
+        root_app_path = Path(f"apps/gitops/argocd/{env}")
+        
+        # If we have a cluster name, use the cluster-specific root app if it exists
+        if cluster:
+            cluster_root_app = root_app_path / cluster / "root-app.yaml"
+            if cluster_root_app.exists():
+                root_app_path = cluster_root_app
+                logging.info(f"🔧 Found cluster-specific root app at: {root_app_path}")
+            else:
+                # Fall back to environment root app
+                root_app_path = root_app_path / "root-app.yaml"
+                logging.info(f"ℹ️  Using environment root app at: {root_app_path}")
+        else:
+            root_app_path = root_app_path / "root-app.yaml"
+        
+        if not root_app_path.exists():
+            raise FileNotFoundError(
+                f"❌ Root application not found. "
+                f"Expected file: {root_app_path}"
+            )
+        
+        # Apply the root application
+        logging.info(f"🔧 Applying root application from: {root_app_path}")
+        run_command(["kubectl", "apply", "-f", str(root_app_path)])
+        logging.info("✅ Root application configured.")
+        
+        # For backward compatibility, also apply the Kustomize overlay if it exists
+        overlay_path = Path(f"apps/system/overlays/{env}")
+        if cluster and env == 'prod':
+            cluster_overlay = overlay_path / cluster / "argocd"
+            if cluster_overlay.exists():
+                overlay_path = cluster_overlay
+                logging.info(f"🔧 Found cluster-specific overlay at: {overlay_path}")
+            else:
+                overlay_path = overlay_path / "argocd"
+        else:
+            overlay_path = overlay_path / "argocd"
+        
+        if overlay_path.exists():
+            logging.info(f"🔧 Applying Kustomize overlay from: {overlay_path}")
+            run_command(["kubectl", "apply", "-k", str(overlay_path)])
+            logging.info("✅ ArgoCD overlay configuration applied.")
+        else:
+            logging.warning(f"⚠️  No Kustomize overlay found at: {overlay_path}")
+            
+        logging.info("✅ ArgoCD self-management configured.")
+
+        # Verify the Application is created and synced
+        try:
+            # Wait for Application CRD to be established
+            run_command([
+                "kubectl", "wait", "--for=condition=Established",
+                "crd/applications.argoproj.io", "--timeout=60s"
+            ])
+            logging.info("✅ ArgoCD Application CRD is ready.")
+            
+            # Wait for the Application to be healthy
+            run_command([
+                "kubectl", "wait", "application/argocd",
+                "-n", "argocd",
+                "--for=condition=Healthy",
+                "--timeout=300s"
+            ])
+            logging.info("✅ ArgoCD Application is healthy.")
+            
+        except subprocess.CalledProcessError as e:
+            logging.warning(f"⚠️  ArgoCD Application verification warning: {e}")
+            logging.info("This might be expected if this is the first sync. ArgoCD will reconcile the state.")
+
     except Exception as e:
-        logging.error(f"❌ Failed to apply root-app.yaml: {e}")
+        logging.error(f"❌ GitOps bootstrap failed: {e}")
         raise
 
     logging.info("🎉 GitOps stack bootstrapped successfully.")

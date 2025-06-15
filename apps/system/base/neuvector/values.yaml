@@ -36,7 +36,7 @@ manager:
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    host: neuvector.example.com
+    host: neuvector.emodo.io
     tls: true
     secretName: neuvector-tls  # Use cert-manager or manually created secret
 

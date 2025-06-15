@@ -1,0 +1,50 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: networking
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+  policyTypes:
+  - Ingress
+  - Egress
+
+  # Allow HTTP/HTTPS traffic from anywhere
+  ingress:
+  - {}
+
+  # Allow metrics scraping from monitoring namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+    ports:
+    - protocol: TCP
+      port: 10254  # metrics
+    - protocol: TCP
+      port: 10246  # healthz
+
+  # Allow egress to pods, external services, and DNS
+  egress:
+  # Allow DNS resolution
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  # Allow all egress to pods
+  - {}
+
+---
+# Label the ingress-nginx namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+  labels:
+    kubernetes.io/metadata.name: ingress-nginx

@@ -9,15 +9,14 @@ metadata:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana-dc11a
     app.kubernetes.io/part-of: kube-system
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
     repoURL: https://github.com/vietcgi/infra.git
     targetRevision: HEAD
     path: apps/system/overlays/prod/dc11a/grafana
-    kustomize:
-      version: v4.5.7
+    kustomize: {}
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

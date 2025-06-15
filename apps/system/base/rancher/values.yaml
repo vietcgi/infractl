@@ -1,6 +1,6 @@
 replicas: 3  # High availability, must match number of ingress/backend pods
 
-hostname: rancher.example.com  # Your Rancher FQDN (must match DNS + cert)
+hostname: rancher.emodo.io  # Your Rancher FQDN (must match DNS + cert)
 
 ingress:
   enabled: true
@@ -9,7 +9,7 @@ ingress:
     source: letsEncrypt  # options: secret, letsEncrypt, rancher, or none
 
 letsEncrypt:
-  email: you@example.com
+  email: you@emodo.io
   environment: production
   privateKeySecretName: letsencrypt-rancher-prod
   http01: true

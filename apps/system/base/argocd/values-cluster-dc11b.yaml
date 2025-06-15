@@ -1,0 +1,49 @@
+global:
+  domain: argocd-dc11b.prod.emodo.io
+
+configs:
+  cm:
+    url: https://argocd-dc11b.prod.emodo.io
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - argocd-dc11b.prod.emodo.io
+    tls:
+      - hosts:
+          - argocd-dc11b.prod.emodo.io
+        secretName: argocd-tls-dc11b
+
+dex:
+  enabled: true
+  config: |
+    connectors:
+      - type: oidc
+        name: Okta
+        id: okta
+        config:
+          issuer: https://emodo.okta.com/oauth2/default
+          clientID: $OKTA_CLIENT_ID
+          clientSecret: $OKTA_CLIENT_SECRET
+          redirectURI: https://argocd-dc11b.prod.emodo.io/api/dex/callback
+          scopes:
+            - openid
+            - profile
+            - email
+
+  env:
+    - name: OKTA_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: okta-credentials
+          key: clientID
+    - name: OKTA_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: okta-credentials
+          key: clientSecret

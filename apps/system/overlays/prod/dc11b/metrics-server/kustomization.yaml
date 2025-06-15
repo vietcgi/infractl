@@ -1,0 +1,171 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Base resources
+resources:
+  - ../../../../base/metrics-server
+  - network-policy.yaml
+
+# Common labels
+commonLabels:
+  app.kubernetes.io/component: metrics
+  app.kubernetes.io/part-of: kube-system
+  topology.kubernetes.io/region: us-west-2  # Update with actual region
+  topology.kubernetes.io/zone: us-west-2b   # Update with actual zone
+
+# Production-specific patches for dc11b
+patches:
+  # Replicas and update strategy
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/strategy
+        value:
+          type: RollingUpdate
+          rollingUpdate:
+            maxUnavailable: 1
+            maxSurge: 1
+
+  # Node affinity and anti-affinity for dc11b
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: node-role.kubernetes.io/worker
+                  operator: In
+                  values: ["true"]
+                - key: topology.kubernetes.io/zone
+                  operator: In
+                  values: ["us-west-2b"]  # Update with actual zone
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values: ["metrics-server"]
+                topologyKey: kubernetes.io/hostname
+
+  # Resource requests and limits for dc11b
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 200m
+            memory: 400Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+
+  # Security context
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /spec/template/spec/securityContext
+        value:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+      - op: add
+        path: /spec/template/spec/containers/0/securityContext
+        value:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
+
+  # Pod disruption budget
+  - target:
+      kind: PodDisruptionBudget
+      name: metrics-server
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 2
+
+  # Service account and RBAC for dc11b
+  - target:
+      kind: ServiceAccount
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          "eks.amazonaws.com/role-arn": "arn:aws:iam::$(AWS_ACCOUNT_ID):role/$(CLUSTER_NAME)-metrics-server-dc11b"
+          "automountServiceAccountToken": "true"
+
+  # Pod topology spread constraints for dc11b
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /spec/template/spec/topologySpreadConstraints
+        value:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfied: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: metrics-server
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfied: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: metrics-server
+
+  # Pod labels and annotations for dc11b
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/priority-class
+        value: system-cluster-critical
+      - op: add
+        path: /spec/template/metadata/annotations
+        value:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "4443"
+          prometheus.io/scheme: "https"
+          prometheus.io/path: "/metrics"
+          cluster: dc11b  # Cluster identifier
+
+# Configuration specific to dc11b
+configMapGenerator:
+  - name: metrics-server-config
+    literals:
+      - NODE_LABELS=kubernetes.io/role=worker,node-role.kubernetes.io/worker=true
+      - KUBELET_PREFERRED_ADDRESS_TYPES=InternalIP,ExternalIP,Hostname
+      - METRIC_RESOLUTION=15s
+      - REQUEST_HEADER_ALLOWED_NAMES=front-proxy-client
+      - REQUEST_HEADER_EXTRA_HEADERS_PREFIX=X-Remote-Extra-
+      - REQUEST_HEADER_GROUP_HEADERS=X-Remote-Group
+      - REQUEST_HEADER_USERNAME_HEADERS=X-Remote-User
+      - CLUSTER_NAME=dc11b  # Cluster identifier

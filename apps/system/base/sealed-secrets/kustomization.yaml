@@ -3,11 +3,112 @@ kind: Kustomization
 
 resources:
   - sealedsecret-crd.yaml
+  - controller.yaml
+  - rbac.yaml
+  - network-policy.yaml
+  - certificate.yaml
+  - prometheus-rules.yaml
 
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/name: sealed-secrets
+  app.kubernetes.io/component: controller
+  app.kubernetes.io/part-of: sealed-secrets
+
+# Namespace for all resources
+namespace: kube-system
+
+# Configure secret generator for the initial TLS key pair
+secretGenerator:
+  - name: sealed-secrets-keys
+    namespace: kube-system
+    behavior: merge
+    files:
+      - tls.key=./certs/controller.key
+      - tls.crt=./certs/controller.crt
+    type: kubernetes.io/tls
+    options:
+      annotations:
+        sealedsecrets.bitnami.com/managed: "true"
+
+# Configure Helm values for the controller
 helmCharts:
   - name: sealed-secrets
     repo: https://bitnami-labs.github.io/sealed-secrets
-    version: 2.15.3
+    version: 2.15.3  # Pin to specific version
     releaseName: sealed-secrets
     namespace: kube-system
     valuesFile: values.yaml
+    includeCRDs: true
+    valuesInline:
+      updateStrategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      service:
+        type: ClusterIP
+        port: 8080
+        annotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8080"
+      command:
+        - "/sealed-secrets-controller"
+        - "--key-renew-period=24h"
+        - "--key-rotation-period=720h"  # 30 days
+        - "--key-expiry=8760h"         # 1 year
+        - "--update-status"
+        - "--key-prefix=sealed-secrets-key"
+        - "--key-size=4096"
+      podAnnotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: http
+        initialDelaySeconds: 30
+        periodSeconds: 10
+      readinessProbe:
+        httpGet:
+          path: /healthz
+          port: http
+        initialDelaySeconds: 5
+        periodSeconds: 5
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
+      priorityClassName: system-cluster-critical
+      tolerations:
+        - key: "CriticalAddonsOnly"
+          operator: "Exists"
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values: ["sealed-secrets"]
+              topologyKey: kubernetes.io/hostname

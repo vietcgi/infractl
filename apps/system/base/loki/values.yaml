@@ -43,7 +43,7 @@ gateway:
     annotations:
       nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     hosts:
-      - host: logs.example.com
+      - host: logs.emodo.io
         paths:
           - /
     tls:

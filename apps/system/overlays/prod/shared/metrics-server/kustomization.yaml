@@ -1,20 +1,36 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Base resources
-resources:
-  - ../../../../base/metrics-server
-  - hpa.yaml
-
-# Exclude APIService and Namespace as they are managed by metrics-server-dc11a
-patches:
-  - path: deployment-patch.yaml
-    target:
-      kind: Deployment
-      name: metrics-server
+# This overlay is for shared production resources that should be applied
+# to all production clusters. For cluster-specific configurations,
+# use the cluster-specific overlay in the dc11a directory.
 
 # Common labels for all resources
 commonLabels:
   app.kubernetes.io/name: metrics-server
-  app.kubernetes.io/instance: metrics-server-prod
   app.kubernetes.io/part-of: kube-system
+  app.kubernetes.io/environment: prod
+
+# Add HPA for production
+resources:
+  - hpa.yaml
+
+# Common patches for all production environments
+patches:
+  # Configure HPA
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: metrics-server
+    patch: |-
+      - op: replace
+        path: /spec/scaleTargetRef/name
+        value: metrics-server
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 5
+      - op: replace
+        path: /spec/metrics/0/resource/target/averageUtilization
+        value: 70

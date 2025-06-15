@@ -323,8 +323,9 @@ def install(
                 env=env,
                 install_flux=False,
                 install_fleet=False,
-                skip_argocd=False,
-                kubeconfig_path=str(local_kubeconfig)
+                skip_argocd=skip_argocd,
+                kubeconfig_path=str(local_kubeconfig),
+                cluster=name
             )
             print("✅ ArgoCD installation completed successfully")
             

@@ -1,0 +1,87 @@
+# Default values for Longhorn
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Longhorn will automatically use the default directories with the highest performance
+# that are created using the following default storage class.
+# If you want to use a custom storage class, you can specify the storage class name here.
+# If left blank, Longhorn will use the default storage class name set on your Kubernetes cluster.
+#
+# Example: "longhorn"
+#
+defaultSettings:
+  defaultDataPath: /var/lib/longhorn/
+  defaultReplicaCount: 3
+  defaultDataLocality: disabled
+  guaranteedEngineManagerCpu: 12%
+  guaranteedReplicaManagerCpu: 12%
+  defaultLonghornStaticStorageClass: longhorn-static
+  backupTarget: ""
+  backupTargetCredentialSecret: ""
+  createDefaultDiskLabeledNodes: true
+  defaultDiskPath: /var/lib/longhorn/
+  defaultReplicaAutoBalance: disabled
+  replicaAutoBalance: ignored
+  storageOverProvisioningPercentage: 100
+  storageMinimalAvailablePercentage: 10
+  upgradeChecker: true
+  defaultReplicaCount: 3
+  defaultDataLocality: disabled
+  defaultLonghornStaticStorageClass: longhorn-static
+  backupTarget: ""
+  backupTargetCredentialSecret: ""
+  createDefaultDiskLabeledNodes: true
+  defaultDiskPath: /var/lib/longhorn/
+  defaultReplicaAutoBalance: disabled
+  replicaAutoBalance: ignored
+  storageOverProvisioningPercentage: 100
+  storageMinimalAvailablePercentage: 10
+  upgradeChecker: true
+  
+# Default StorageClass
+#
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 3
+  reclaimPolicy: Delete
+  allowVolumeExpansion: true
+  
+# Enable CSI snapshot support
+csi:
+  attacherReplicaCount: 3
+  provisionerReplicaCount: 3
+  resizerReplicaCount: 3
+  snapshotterReplicaCount: 3
+  
+# Enable Longhorn UI
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  hosts:
+    - host: longhorn.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: longhorn-tls
+  #    hosts:
+  #      - longhorn.local
+
+# Enable metrics service
+metrics:
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    additionalLabels:
+      release: kube-prometheus-stack
+
+# Resource requests and limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi

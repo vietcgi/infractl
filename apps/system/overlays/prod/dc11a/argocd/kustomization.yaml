@@ -1,4 +1,39 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: argocd
+
+# Include the base prod configuration
 resources:
-- ../../shared/argocd
+  - ../../argocd
+
+# Include shared components
+components:
+  - ../../../../components/argocd/cluster
+
+# Set cluster-specific values
+configMapGenerator:
+  - name: cluster-config
+    literals:
+      - CLUSTER_NAME=dc11a
+      - INGRESS_HOST=argocd.dc11a.prod.emodo.io
+      - |
+        INGRESS_YAML={"server":{"ingress":{"hosts":["argocd.dc11a.prod.emodo.io"],"tls":[{"hosts":["argocd.dc11a.prod.emodo.io"],"secretName":"argocd-tls"}]}}}
+
+# Set cluster labels
+labels:
+  - pairs:
+      cluster: dc11a
+      environment: prod
+
+# Replace the entire values block
+replacements:
+  - source:
+      kind: ConfigMap
+      name: cluster-config
+      fieldPath: data.INGRESS_YAML
+    targets:
+      - select:
+          kind: Application
+          name: argocd
+        fieldPaths:
+          - spec.source.helm.values

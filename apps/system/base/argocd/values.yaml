@@ -29,12 +29,12 @@ server:
     enabled: true
     ingressClassName: nginx
     hosts:
-      - argocd.example.com
+      - argocd.emodo.io
     annotations:
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     tls:
       - hosts:
-          - argocd.example.com
+          - argocd.emodo.io
         secretName: argocd-tls
   livenessProbe:
     httpGet:

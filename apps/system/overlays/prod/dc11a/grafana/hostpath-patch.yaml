@@ -13,19 +13,3 @@ spec:
   hostPath:
     path: "/data/grafana"
     type: DirectoryOrCreate
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: grafana-storage
-  namespace: monitoring
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-  selector:
-    matchLabels:
-      type: local

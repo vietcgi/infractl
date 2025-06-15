@@ -3,12 +3,16 @@ kind: Service
 metadata:
   name: metrics-server
   namespace: metrics-server
+  labels:
+    app.kubernetes.io/name: metrics-server
+    app.kubernetes.io/part-of: kube-system
 spec:
   selector:
     k8s-app: metrics-server
   ports:
-    - port: 443
-      targetPort: 443
+    - name: https
+      port: 443
+      targetPort: https
       protocol: TCP
-      name: https
-
+  type: ClusterIP
+  sessionAffinity: None
