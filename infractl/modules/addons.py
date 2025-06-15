@@ -245,9 +245,18 @@ def bootstrap_gitops_stack(
         raise
 
     try:
-        # 1. Install CoreDNS
-        logging.info("🌐 Installing CoreDNS")
-        apply_kustomize(Path("apps/system/base/coredns"))
+        # 1. Install CoreDNS with cluster-specific configuration if available
+        coredns_path = Path("apps/system/base/coredns")
+        if cluster:
+            cluster_coredns = Path(f"apps/system/overlays/{env}/{cluster}/coredns")
+            if cluster_coredns.exists():
+                coredns_path = cluster_coredns
+                logging.info(f"🌐 Using cluster-specific CoreDNS configuration: {coredns_path}")
+            else:
+                logging.info(f"ℹ️  No cluster-specific CoreDNS found at {cluster_coredns}, using base configuration")
+        
+        logging.info(f"🌐 Installing CoreDNS from {coredns_path}")
+        apply_kustomize(coredns_path)
         
         # 2. Create Sealed Secrets TLS secret if key files exist
         try:

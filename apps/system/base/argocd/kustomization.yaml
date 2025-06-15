@@ -5,12 +5,14 @@ resources:
   - namespace.yaml
   - application.yaml
 
-# Common labels for all resources
-commonLabels:
-  app.kubernetes.io/name: argocd
-  app.kubernetes.io/instance: argocd
-  app.kubernetes.io/part-of: argocd
-  argocd.argoproj.io/instance: argocd
+# Labels for all resources
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/name: argocd
+      app.kubernetes.io/instance: argocd
+      app.kubernetes.io/part-of: argocd
+      argocd.argoproj.io/instance: argocd
 
 # Name suffix for all resources
 nameSuffix: ""
