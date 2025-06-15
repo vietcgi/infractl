@@ -6,7 +6,6 @@ resources:
   - ../../../../base/grafana
   - hostpath-patch.yaml
   - manual-storageclass.yaml
-  - pvc-patch.yaml
 
 # Common labels for all resources
 commonLabels:
@@ -51,3 +50,12 @@ patches:
       - op: replace
         path: /spec/maxReplicas
         value: 3
+
+  # Patch the PVC to use manual storage class
+  - target:
+      kind: PersistentVolumeClaim
+      name: grafana-storage
+    patch: |-
+      - op: replace
+        path: /spec/storageClassName
+        value: manual
