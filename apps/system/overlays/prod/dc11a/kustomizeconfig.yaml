@@ -1,3 +1,0 @@
-apiVersion: builtin
-kind: KustomizeConfig
-loadRestrictions: none

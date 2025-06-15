@@ -255,9 +255,9 @@ vars:
 
 ## Next Steps
 1. [x] Implement Python bootstrap framework in `infractl/modules/addons.py`
-2. [x] Create ArgoCD self-management configuration with Kustomize components
-3. [x] Set up cluster-specific configurations for dc11a and dc11b
-4. [x] Document the system (this document)
+2. [ ] Create ArgoCD self-management configuration with Kustomize components
+3. [ ] Set up cluster-specific configurations for dc11a and dc11b
+4. [ ] Document the system (this document)
 5. [ ] Add validation tests for Kustomize configurations
 6. [ ] Document the bootstrap process and requirements
 7. [ ] Create examples for adding new clusters

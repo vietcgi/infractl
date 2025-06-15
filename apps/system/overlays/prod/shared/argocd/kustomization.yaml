@@ -1,7 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- ../../../../base/argocd
-# Removed Helm chart reference to use plain Kubernetes manifests
-# For ArgoCD self-management, we'll use the base resources directly
-# and let ArgoCD manage itself through the Application CRD

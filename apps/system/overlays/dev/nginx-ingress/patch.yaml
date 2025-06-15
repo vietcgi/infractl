@@ -1,7 +1,0 @@
-# Example patch for nginx-ingress in dev environment
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: nginx-ingress
-  labels:
-    environment: dev

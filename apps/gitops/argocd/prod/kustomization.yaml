@@ -1,5 +1,0 @@
-resources:
-  - root-app.yaml
-  - system-apps-helm.yaml
-  - system-apps-raw.yaml
-
