@@ -5,16 +5,14 @@ kind: Kustomization
 configurations:
   - kustomizeconfig.yaml
 
-# Reference the base Grafana configuration
+# Reference the base Grafana configuration from Helm chart
 resources:
-  - ../../../../base/grafana/namespace.yaml
-  - ../../../../base/grafana/rbac.yaml
-  - ../../../../base/grafana/service.yaml
-  - ../../../../base/grafana/serviceaccount.yaml
-  - ../../../../base/grafana/deployment.yaml
-  - ../../../../base/grafana/hpa.yaml
-  - ../../../../base/grafana/configmap.yaml
-  # Intentionally excluding the pvc.yaml file
+  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/namespace.yaml
+  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/serviceaccount.yaml
+  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/configmap.yaml
+  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/service.yaml
+  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/deployment.yaml
+  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/hpa.yaml
 
 # Remove the PVC resource
 patches:
