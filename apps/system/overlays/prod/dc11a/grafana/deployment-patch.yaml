@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       # Remove initContainers
-      initContainers: []
+      initContainers: null
       
       # Add node selector
       nodeSelector:
@@ -24,13 +24,23 @@ spec:
       containers:
       - name: grafana
         securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+          readOnlyRootFilesystem: false
           runAsUser: 0
           runAsGroup: 0
           runAsNonRoot: false
-          allowPrivilegeEscalation: true
-          readOnlyRootFilesystem: false
-          capabilities:
-            add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-storage
+        - mountPath: /etc/grafana/grafana.ini
+          name: grafana-config
+          readOnly: true
+          subPath: grafana.ini
+        - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+          name: grafana-config
+          subPath: datasources.yaml
       
       # Update volumes to use emptyDir
       volumes:

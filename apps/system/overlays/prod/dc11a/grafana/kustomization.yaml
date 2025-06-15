@@ -4,11 +4,10 @@ kind: Kustomization
 # Reference the base Grafana configuration
 resources:
   - ../../../../base/grafana
-  - manual-storageclass.yaml
 
 # Patches for the Grafana deployment
-patches:
-  - path: deployment-patch.yaml
+patchesStrategicMerge:
+  - deployment-patch.yaml
 
 # Common labels for all resources
 commonLabels:
@@ -29,9 +28,8 @@ commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   argocd.argoproj.io/sync-wave: "-1"
 
-# Patches for other resources
+# Patch the HPA to adjust scaling for dc11a
 patches:
-  # Patch the HPA to adjust scaling for dc11a
   - target:
       kind: HorizontalPodAutoscaler
       name: grafana
