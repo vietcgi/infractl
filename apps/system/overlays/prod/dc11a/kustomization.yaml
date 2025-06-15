@@ -1,0 +1,20 @@
+resources:
+  - grafana/
+  - grafana-simple/
+  - argocd/
+  - monitoring/
+  - metrics-server/
+  - longhorn/
+  - coredns/
+  - sealed-secrets/
+  - rancher/
+  - prometheus-operator-crds/
+  - prometheus/
+  - nodelocaldns/
+  - nginx-ingress/
+  - neuvector/
+  - cilium/
+  - cert-manager-crds/
+  - alertmanager/
+  - loki/
+  - cert-manager/ 
