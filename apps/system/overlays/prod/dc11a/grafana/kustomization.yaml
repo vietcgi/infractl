@@ -38,7 +38,6 @@ patches:
         value:
           kubernetes.io/arch: amd64
           kubernetes.io/os: linux
-          node-role.kubernetes.io/worker: ""
   # Patch the HPA to adjust scaling for dc11a
   - target:
       kind: HorizontalPodAutoscaler
