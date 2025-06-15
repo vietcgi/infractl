@@ -35,7 +35,15 @@ spec:
         - mountPath: /var/lib/grafana
           name: grafana-storage
       
-      # Define volumes
+      # Override volumes to use emptyDir instead of PVC
       volumes:
       - name: grafana-storage
         emptyDir: {}
+      - name: grafana-config
+        configMap:
+          name: grafana-config
+          items:
+            - key: grafana.ini
+              path: grafana.ini
+            - key: datasources.yaml
+              path: datasources.yaml
