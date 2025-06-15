@@ -5,7 +5,7 @@ kind: Kustomization
 resources:
   - ../../../../base/grafana
 
-# Exclude the PVC resource from the base
+# Remove the PVC resource
 patches:
   - target:
       kind: PersistentVolumeClaim
@@ -13,11 +13,22 @@ patches:
     patch: |-
       $patch: delete
 
-# Patches for the Grafana deployment
+# Patch the Deployment to use emptyDir and update security context
   - path: json-patch.yaml
     target:
       kind: Deployment
       name: grafana
+
+# Remove the PVC resource from the base resources
+resources:
+  - ../../../../base/grafana/namespace.yaml
+  - ../../../../base/grafana/rbac.yaml
+  - ../../../../base/grafana/service.yaml
+  - ../../../../base/grafana/serviceaccount.yaml
+  - ../../../../base/grafana/deployment.yaml
+  - ../../../../base/grafana/hpa.yaml
+  - ../../../../base/grafana/configmap.yaml
+  # Intentionally excluding the pvc.yaml file
 
 # Common labels for all resources
 commonLabels:
