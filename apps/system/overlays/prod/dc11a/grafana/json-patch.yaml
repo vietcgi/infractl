@@ -1,0 +1,14 @@
+- op: remove
+  path: /spec/template/spec/volumes/0/persistentVolumeClaim
+- op: remove
+  path: /spec/template/spec/containers/0/volumeMounts/0
+- op: add
+  path: /spec/template/spec/volumes/0
+  value:
+    name: grafana-storage
+    emptyDir: {}
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/0
+  value:
+    name: grafana-storage
+    mountPath: /var/lib/grafana

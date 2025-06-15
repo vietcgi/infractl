@@ -6,8 +6,11 @@ resources:
   - ../../../../base/grafana
 
 # Patches for the Grafana deployment
-patchesStrategicMerge:
-  - deployment-patch.yaml
+patches:
+  - path: json-patch.yaml
+    target:
+      kind: Deployment
+      name: grafana
 
 # Common labels for all resources
 commonLabels:
