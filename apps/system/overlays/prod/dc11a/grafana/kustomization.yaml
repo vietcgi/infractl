@@ -1,34 +1,34 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# Disable load restrictions to allow referencing files outside the overlay
-configurations:
-  - kustomizeconfig.yaml
 
-# Reference the base Grafana configuration from Helm chart
+# Reference the base Grafana configuration
 resources:
-  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/namespace.yaml
-  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/serviceaccount.yaml
-  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/configmap.yaml
-  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/service.yaml
-  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/deployment.yaml
-  - ../../../../base/grafana/charts/grafana-7.2.0/grafana/templates/hpa.yaml
+  - ../../../../base/grafana/namespace.yaml
+  - ../../../../base/grafana/serviceaccount.yaml
+  - ../../../../base/grafana/configmap.yaml
+  - ../../../../base/grafana/service.yaml
+  - ../../../../base/grafana/deployment.yaml
+  - ../../../../base/grafana/hpa.yaml
 
-# Remove the PVC resource
+# Patches for various resources
 patches:
+  # Remove the PVC resource
   - target:
       kind: PersistentVolumeClaim
       name: grafana-storage
     patch: |-
-      $patch: delete
+      - op: remove
+        path: /metadata/name
+        value: grafana-storage
 
-# Patch the Deployment to use emptyDir and update security context
+  # Patch the Deployment to use emptyDir and update security context
   - path: json-patch.yaml
     target:
       kind: Deployment
       name: grafana
 
-# Patch the HPA to adjust scaling for dc11a
+  # Patch the HPA to adjust scaling for dc11a
   - target:
       kind: HorizontalPodAutoscaler
       name: grafana
@@ -40,10 +40,11 @@ patches:
         path: /spec/maxReplicas
         value: 3
 
-# Common labels for all resources
-commonLabels:
-  app.kubernetes.io/environment: prod
-  app.kubernetes.io/cluster: dc11a
+# Labels for all resources
+labels:
+  - pairs:
+      app.kubernetes.io/environment: prod
+      app.kubernetes.io/cluster: dc11a
 
 # Namespace
 namespace: monitoring
@@ -58,16 +59,3 @@ images:
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   argocd.argoproj.io/sync-wave: "-1"
-
-# Patch the HPA to adjust scaling for dc11a
-patches:
-  - target:
-      kind: HorizontalPodAutoscaler
-      name: grafana
-    patch: |-
-      - op: replace
-        path: /spec/minReplicas
-        value: 1
-      - op: replace
-        path: /spec/maxReplicas
-        value: 3
