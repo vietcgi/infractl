@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: system-apps-matrix
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: argocd
+            namespace: argocd
+            syncWave: "-4"
+          - name: cert-manager
+            namespace: cert-manager
+            syncWave: "-3"
+          - name: metrics-server
+            namespace: metrics-server
+            syncWave: "-1"
+          - name: longhorn
+            namespace: longhorn-system
+            syncWave: "-2"
+          - name: coredns
+            namespace: kube-system
+            syncWave: "0"
+  template:
+    metadata:
+      name: '{{name}}-dc11a'
+      labels:
+        app: '{{name}}'
+        cluster: 'dc11a'
+        environment: 'prod'
+    spec:
+      project: default
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      source:
+        repoURL: https://github.com/vietcgi/infra.git
+        targetRevision: main
+        path: apps/system/overlays/prod/dc11a/{{name}}
+        kustomize:
+          nameSuffix: -dc11a
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+      revisionHistoryLimit: 3
+      ignoreDifferences:
+        - group: ""
+          kind: Service
+          name: kube-dns-dc11a
+          namespace: kube-system
+          jsonPointers:
+            - /spec/clusterIP
+            - /spec/clusterIPs

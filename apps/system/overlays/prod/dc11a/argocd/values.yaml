@@ -1,0 +1,47 @@
+# Base values from the ArgoCD Helm chart
+# Only override what's necessary for this specific cluster
+
+# Enable the ingress
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    ingressName: argocd-server  # Match the existing ingress name
+    hostname: argocd-dc11a.emodo.io  # Cluster-specific hostname
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    hosts:
+      - argocd-dc11a.emodo.io  # Must match hostname
+    tls:
+      - hosts:
+          - argocd-dc11a.emodo.io
+        secretName: argocd-tls
+
+# Controller settings
+controller:
+  replicas: 2  # For HA
+  
+# Redis settings for HA
+redis:
+  enabled: true
+  architecture: replication  # For HA
+  replica:
+    replicaCount: 2
+
+# Resource limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Enable server-side apply
+configs:
+  params:
+    server.insecure: "false"
+    server.disable.auth: "false"

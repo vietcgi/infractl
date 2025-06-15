@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metrics-server-alerts
+  namespace: metrics-server
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: metrics-server.rules
+      rules:
+        - alert: MetricsServerDown
+          expr: absent(up{job="metrics-server"} == 1)
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Metrics-server is down"
+            description: "No scrape data received from metrics-server in the last 2 minutes."

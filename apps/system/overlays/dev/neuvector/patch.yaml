@@ -1,0 +1,7 @@
+# Example patch for neuvector in dev environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neuvector
+  labels:
+    environment: dev

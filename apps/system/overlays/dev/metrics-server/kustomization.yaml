@@ -1,0 +1,110 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Common labels for all resources in dev
+commonLabels:
+  app.kubernetes.io/name: metrics-server
+  app.kubernetes.io/part-of: kube-system
+  app.kubernetes.io/environment: dev
+  app.kubernetes.io/managed-by: kustomize
+
+# Base resources
+resources:
+  - ../../../base/metrics-server
+  - network-policy.yaml
+  - hpa.yaml
+
+# Development-specific patches
+patches:
+  # Configure development HPA
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: metrics-server
+    patch: |-
+      - op: replace
+        path: /spec/scaleTargetRef/name
+        value: metrics-server
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2
+      - op: replace
+        path: /spec/metrics/0/resource/target/averageUtilization
+        value: 50
+
+  # Development deployment patches
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/strategy
+        value:
+          type: RollingUpdate
+          rollingUpdate:
+            maxUnavailable: 0
+            maxSurge: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 50m
+            memory: 100Mi
+          limits:
+            cpu: 100m
+            memory: 200Mi
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                - key: node-role.kubernetes.io/worker
+                  operator: In
+                  values: ["true"]
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values: ["metrics-server"]
+                topologyKey: kubernetes.io/hostname
+
+  # Security context for dev
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /spec/template/spec/securityContext
+        value:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+      - op: add
+        path: /spec/template/spec/containers/0/securityContext
+        value:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
+            memory: 200Mi
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          kubernetes.io/os: linux

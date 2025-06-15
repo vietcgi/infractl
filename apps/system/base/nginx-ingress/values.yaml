@@ -1,2 +1,79 @@
 controller:
-  replicaCount: 2 
+  replicaCount: 3  # Use at least 3 for HA across zones/nodes
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 75
+
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+  service:
+    type: LoadBalancer
+    externalTrafficPolicy: Local  # Better source IP preservation and performance
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"  # If on AWS
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - ingress-nginx
+
+  priorityClassName: system-cluster-critical
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+      scrapeInterval: 30s
+      scrapeTimeout: 10s
+
+  config:
+    use-forwarded-headers: "true"
+    use-http2: "true"
+    enable-brotli: "true"
+    enable-underscores-in-headers: "true"
+    proxy-body-size: "512m"
+    proxy-connect-timeout: "30"
+    proxy-read-timeout: "600"
+    proxy-send-timeout: "600"
+    ssl-redirect: "true"
+    server-tokens: "false"
+    log-format-escape-json: "true"
+    log-format-upstream: >
+      {"time":"$time_iso8601","remote_addr":"$proxy_protocol_addr","x_forwarded_for":"$proxy_add_x_forwarded_for","request_method":"$request_method","request_uri":"$request_uri","status":"$status","body_bytes_sent":"$body_bytes_sent","request_time":"$request_time","upstream_response_time":"$upstream_response_time","request_length":"$request_length","user_agent":"$http_user_agent"}
+
+defaultBackend:
+  enabled: true
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi

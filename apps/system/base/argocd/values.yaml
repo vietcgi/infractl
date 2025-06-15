@@ -1,1 +1,158 @@
- 
+installCRDs: true
+
+networkPolicy:
+  create: false
+
+controller:
+  replicas: 2
+  priorityClassName: system-cluster-critical
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+server:
+  replicas: 2
+  extraArgs:
+  service:
+    type: ClusterIP
+    servicePortHttp: 80
+    servicePortHttps: 443
+    targetPortHttp: 8080
+    targetPortHttps: 8080
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - argocd.emodo.io
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    tls:
+      - hosts:
+          - argocd.emodo.io
+        secretName: argocd-tls
+  livenessProbe:
+    httpGet:
+      path: /healthz?full=true
+      port: 8080
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 8080
+  metrics:
+    enabled: true
+  priorityClassName: system-cluster-critical
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+repoServer:
+  replicas: 2
+  priorityClassName: system-cluster-critical
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+applicationSet:
+  replicaCount: 2
+  priorityClassName: system-cluster-critical
+  metrics:
+    enabled: true
+
+dex:
+  enabled: true
+  config:
+    web:
+      http: 5556
+    connectors:
+      - type: github
+        id: github
+        name: GitHub
+        config:
+          clientID: 7a922c0453f09a8a41f4
+          clientSecret: 8161539d05ee26525fa18c2718941bc80ab84878
+
+notifications:
+  enabled: true
+  metrics:
+    enabled: true
+
+redis:
+  auth:
+    enabled: true
+  metrics:
+    enabled: true
+
+configs:
+  params:
+    server.port: "8080"
+    server.metrics.port: "8083"
+    applicationsetcontroller.enable.progressive.syncs: "true"
+    oidc.tls.insecure.skip.verify: "true"
+    oidc.config.insecure: "true"  # <- force insecure mode
+
+  cm:
+    application.instanceLabelKey: argocd.argoproj.io/instance
+    exec.enabled: "true"
+    timeout.reconciliation: 60s
+    resource.exclusions: |
+      - apiGroups:
+          - "metrics.k8s.io"
+        kinds:
+          - "PodMetrics"
+        clusters:
+          - "*"
+    url: http://argocd-server.argocd.svc.cluster.local
+    oidc.config: |
+      name: GitHub
+      issuer: http://argocd-server.argocd.svc.cluster.local/api/dex
+      clientID: argo-cd
+      clientSecret: unused
+      requestedScopes: ["openid", "profile", "email", "groups"]
+
+    policy.default: role:readonly
+    policy.matchMode: glob
+    scopes: '[login]'
+    policy.csv: |
+      p, role:admin, applications, *, */*, allow
+      p, role:admin, clusters, get, *, allow
+      p, role:admin, repositories, *, *, allow
+      p, role:admin, projects, *, *, allow
+      p, role:admin, logs, get, *, allow
+      p, role:admin, exec, create, *, allow
+      p, role:admin, certificates, *, *, allow
+      p, role:admin, accounts, *, *, allow
+  secret:
+    argocdServerAdminPassword: $2b$10$VbbBjxzQFhnIeMeODMCLReuxTYeXyuGOUu1bo6TjLgUkb2GcC66K2
+    extra:
+      # add vault/gpg/git secrets here if needed
+
+prometheus:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - operator: "Exists"
+
+nodeSelector:
+  kubernetes.io/os: linux

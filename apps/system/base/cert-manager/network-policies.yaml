@@ -1,0 +1,75 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+  labels:
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+  # Allow webhook access from kube-apiserver
+  ingress:
+  - from:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app: cert-manager
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          component: kube-apiserver
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cert-manager
+    ports:
+    - protocol: TCP
+      port: 9402  # metrics
+    - protocol: TCP
+      port: 10250  # kubelet healthz
+    - protocol: TCP
+      port: 6443  # kube-apiserver
+
+  # Allow DNS resolution and ACME HTTP-01 challenges
+  egress:
+  # Allow DNS resolution
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  # Allow HTTP-01 challenge validation
+  - ports:
+    - port: 80
+      protocol: TCP
+  # Allow HTTPS for ACME server communication
+  - ports:
+    - port: 443
+      protocol: TCP
+  # Allow egress to kube-apiserver
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          component: kube-apiserver
+    ports:
+    - protocol: TCP
+      port: 6443
+
+---
+# Label the cert-manager namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    kubernetes.io/metadata.name: cert-manager

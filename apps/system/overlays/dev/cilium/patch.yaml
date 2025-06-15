@@ -1,0 +1,28 @@
+# Patch the HelmChart or HelmRelease (depending on your stack)
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    kubeProxyReplacement: strict
+    k8sServiceHost: 127.0.0.1
+    k8sServicePort: 6443
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    dnsProxy:
+      enable: true
+    hubble:
+      enabled: true
+      relay:
+        enabled: true
+    ipam:
+      mode: cluster-pool
+      clusterPoolIPv4PodCIDR: 10.0.0.0/8
+      clusterPoolIPv4MaskSize: 24

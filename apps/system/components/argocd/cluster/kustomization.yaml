@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+# This component is used to configure cluster-specific settings for ArgoCD
+# It expects the following variables to be set by the parent kustomization:
+# - CLUSTER_NAME: The name of the cluster (e.g., dc11a, dc11b)
+# - INGRESS_HOST: The ingress host for this cluster
+
+patches:
+  - target:
+      kind: Application
+      name: argocd
+    patch: |-
+      - op: add
+        path: /metadata/labels/cluster
+        value: ${CLUSTER_NAME}
+      - op: add
+        path: /spec/source/helm/values
+        value: |
+          server:
+            ingress:
+              hosts:
+                - ${INGRESS_HOST}
+              tls:
+                - hosts:
+                    - ${INGRESS_HOST}
+                  secretName: argocd-tls

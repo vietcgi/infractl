@@ -1,0 +1,7 @@
+# Example patch for cert-manager in dev environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    environment: dev

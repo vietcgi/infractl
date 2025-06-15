@@ -1,0 +1,42 @@
+# Remove the existing volume that references the PVC
+- op: remove
+  path: /spec/template/spec/volumes/0
+
+# Add a new volume with emptyDir
+- op: add
+  path: /spec/template/spec/volumes/0
+  value:
+    name: grafana-storage
+    emptyDir: {}
+
+# Remove the existing volumeMount that references the PVC volume
+- op: remove
+  path: /spec/template/spec/containers/0/volumeMounts/0
+
+# Add a new volumeMount for the emptyDir volume
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/0
+  value:
+    name: grafana-storage
+    mountPath: /var/lib/grafana
+
+# Update security context to run as root temporarily to avoid permission issues
+- op: replace
+  path: /spec/template/spec/securityContext
+  value:
+    runAsUser: 0
+    runAsGroup: 0
+    fsGroup: 0
+    runAsNonRoot: false
+
+# Update container security context to run as root
+- op: replace
+  path: /spec/template/spec/containers/0/securityContext
+  value:
+    allowPrivilegeEscalation: true
+    capabilities:
+      add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+    readOnlyRootFilesystem: false
+    runAsUser: 0
+    runAsGroup: 0
+    runAsNonRoot: false

@@ -1,0 +1,89 @@
+grafana:
+  ingress:
+    hosts:
+    - host: grafana.dc11a.prod.emodo.io
+    tls:
+    - secretName: grafana-tls
+      hosts:
+      - grafana.dc11a.prod.emodo.io
+cert-manager:
+  ingress:
+    hosts:
+    - host: cert-manager.dc11a.prod.emodo.io
+    tls:
+    - secretName: cert-manager-tls
+      hosts:
+      - cert-manager.dc11a.prod.emodo.io
+prometheus:
+  server:
+    ingress:
+      hosts:
+      - prometheus.dc11a.prod.emodo.io
+      tls:
+      - secretName: prometheus-tls
+        hosts:
+        - prometheus.dc11a.prod.emodo.io
+loki:
+  ingress:
+    hosts:
+    - host: loki.dc11a.prod.emodo.io
+    tls:
+    - secretName: loki-tls
+      hosts:
+      - loki.dc11a.prod.emodo.io
+longhorn:
+  ingress:
+    hosts:
+    - host: longhorn.dc11a.prod.emodo.io
+    tls:
+    - secretName: longhorn-tls
+      hosts:
+      - longhorn.dc11a.prod.emodo.io
+neuvector:
+  ingress:
+    hosts:
+    - host: neuvector.dc11a.prod.emodo.io
+    tls:
+    - secretName: neuvector-tls
+      hosts:
+      - neuvector.dc11a.prod.emodo.io
+nginx-ingress:
+  controller:
+    ingressClass: nginx
+    service:
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: ingress.dc11a.prod.emodo.io
+rancher:
+  hostname: rancher.dc11a.prod.emodo.io
+  ingress:
+    tls:
+    - secretName: rancher-tls
+      hosts:
+      - rancher.dc11a.prod.emodo.io
+alertmanager:
+  ingress:
+    hosts:
+    - host: alertmanager.dc11a.prod.emodo.io
+    tls:
+    - secretName: alertmanager-tls
+      hosts:
+      - alertmanager.dc11a.prod.emodo.io
+sealed-secrets:
+  ingress:
+    hosts:
+    - host: sealed-secrets.dc11a.prod.emodo.io
+    tls:
+    - secretName: sealed-secrets-tls
+      hosts:
+      - sealed-secrets.dc11a.prod.emodo.io
+cilium:
+  # Typically no Ingress needed
+argocd:
+  server:
+    ingress:
+      hosts:
+      - argocd.dc11a.prod.emodo.io
+      tls:
+      - secretName: argocd-tls
+        hosts:
+        - argocd.dc11a.prod.emodo.io

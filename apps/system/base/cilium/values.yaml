@@ -1,1 +1,77 @@
-kubeProxyReplacement: strict 
+# Base resource requests/limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Enable key Cilium features
+kubeProxyReplacement: strict
+k8sServiceHost: 127.0.0.1
+k8sServicePort: 6443
+
+# IPAM settings
+ipam:
+  mode: cluster-pool
+  clusterPoolIPv4PodCIDR: 10.0.0.0/8
+  clusterPoolIPv4MaskSize: 24
+
+# DNS acceleration
+dnsProxy:
+  enable: true
+  matchPattern: "*"
+  matchName: ".*"
+
+# Hubble observability
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  metrics:
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - icmp
+
+# BPF map tuning
+bpf:
+  mapDynamicSizeRatio: 0.005
+  policyMapMax: 65536
+  lbMapMax: 131072
+  lbSourceRangeCheck: true
+
+# Identity configuration
+identityAllocationMode: crd
+identityChangeGracePeriod: "30s"
+
+# Cgroup settings
+cgroup:
+  autoMount:
+    enabled: false
+
+# NodePort + routing
+tunnelProtocol: vxlan
+enableNodePort: true
+autoDirectNodeRoutes: false
+nodePort:
+  acceleration: native
+  bindProtection: true
+
+# Aggregated monitoring
+monitor:
+  aggregation:
+    level: medium
+    interval: 5s
+    flags: all
+  dropNotification: true
+
+# Operator metrics
+operator:
+  prometheus:
+    enabled: true
+
+# Rollout safety
+rollOutCiliumPods: true

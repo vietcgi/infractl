@@ -1,2 +1,54 @@
 defaultSettings:
-  replicaCount: 3 
+  defaultReplicaCount: 3              # For HA (requires ≥ 3 nodes with storage)
+  defaultDataPath: /var/lib/longhorn # Host path for volume data
+  defaultLonghornStaticStorageClass: longhorn
+  defaultDataLocality: disabled      # Or best-effort if you want to keep one replica local
+  replicaSoftAntiAffinity: true
+  nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+
+  backupTarget: ""                   # Set to s3://... if using backup
+  backupTargetCredentialSecret: ""   # Name of secret with backup creds
+
+  storageOverProvisioningPercentage: 500
+  guaranteedEngineManagerCPU: 20m
+  guaranteedReplicaManagerCPU: 20m
+  priorityClass: system-cluster-critical
+
+service:
+  ui:
+    type: ClusterIP
+    port: 80
+
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 3
+  reclaimPolicy: Retain
+
+longhornManager:
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+
+longhornDriver:
+  tolerations:
+    - operator: "Exists"
+
+longhornUI:
+  tolerations:
+    - operator: "Exists"
+
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+  host: longhorn.emodo.io
+  tls: false
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus

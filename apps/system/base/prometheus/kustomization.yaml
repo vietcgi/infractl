@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/name: prometheus
+  app.kubernetes.io/instance: prometheus
+  app.kubernetes.io/part-of: kube-system
+  app.kubernetes.io/component: monitoring
+
+# Namespace
+namespace: monitoring
+
+# Resources
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - service.yaml
+  - serviceaccount.yaml
+
+# Helm chart configuration
+helmCharts:
+  - name: prometheus
+    repo: https://prometheus-community.github.io/helm-charts
+    version: 25.11.0
+    releaseName: prometheus
+    namespace: monitoring
+    valuesFile: values.yaml
+    includeCRDs: true
+    skipHooks: false
+
+# Configuration for kustomize-helm-transformer
+configurations:
+  - kustomize-helm-transformer.yaml
+
+# Common annotations
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  argocd.argoproj.io/sync-wave: "-1"
+
+# Images
+images:
+  - name: prom/prometheus
+    newName: prom/prometheus
+    newTag: v2.47.0
+  - name: prom/node-exporter
+    newName: prom/node-exporter
+    newTag: v1.6.1
+  - name: k8s.gcr.io/kube-state-metrics/kube-state-metrics
+    newName: registry.k8s.io/kube-state-metrics/kube-state-metrics
+    newTag: v2.9.2

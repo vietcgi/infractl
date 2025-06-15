@@ -1,0 +1,82 @@
+# Cluster role for metrics server to access cluster metrics
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    app.kubernetes.io/name: metrics-server
+    app.kubernetes.io/part-of: kube-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - nodes/metrics
+  - namespaces
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "metrics.k8s.io"
+  resources:
+  - "*"
+  verbs:
+  - get
+  - list
+  - watch
+---
+# Cluster role for auth delegation
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server:auth-delegator
+  labels:
+    app.kubernetes.io/name: metrics-server
+    app.kubernetes.io/part-of: kube-system
+rules:
+- apiGroups: ["authentication.k8s.io"]
+  resources: ["tokenreviews"]
+  verbs: ["create"]
+- apiGroups: ["authorization.k8s.io"]
+  resources: ["subjectaccessreviews"]
+  verbs: ["create"]
+---
+# Cluster role binding for auth delegation
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    app.kubernetes.io/name: metrics-server
+    app.kubernetes.io/part-of: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: metrics-server
+---
+# Cluster role binding for metrics server
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    app.kubernetes.io/name: metrics-server
+    app.kubernetes.io/part-of: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: metrics-server
+- kind: ServiceAccount
+  name: metrics-server-dc11a
+  namespace: metrics-server

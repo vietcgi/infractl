@@ -1,0 +1,5 @@
+# kustomizeconfig.yaml
+# This configuration disables the load restrictions that prevent referencing files outside the kustomization directory
+apiVersion: builtin
+kind: KustomizeConfig
+loadRestrictions: none

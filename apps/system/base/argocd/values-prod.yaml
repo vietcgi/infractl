@@ -1,0 +1,73 @@
+# Production-specific overrides for Argo CD
+# These settings are applied to all production clusters
+
+# High Availability
+controller:
+  replicas: 3
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+
+server:
+  replicas: 3
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+
+  # Enable audit logging
+  audit:
+    enabled: true
+    logFormat: json
+    policy: |
+      level: RequestResponse
+
+# Security
+redis:
+  enabled: true
+  metrics:
+    enabled: true
+
+# Enable network policies
+networkPolicy:
+  enabled: true
+  ingress:
+    from:
+      - namespaceSelector: {}
+      - podSelector: {}
+  egress:
+    to:
+      - namespaceSelector: {}
+      - podSelector: {}
+
+# Enable metrics and monitoring
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+
+# Resource exclusions
+trackingMethod: annotation

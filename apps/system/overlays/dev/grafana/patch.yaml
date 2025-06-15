@@ -1,0 +1,7 @@
+# Example patch for grafana in dev environment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grafana
+  labels:
+    environment: dev

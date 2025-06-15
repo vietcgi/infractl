@@ -1,8 +1,0 @@
-ingress:
-  enabled: true
-  hosts:
-    - grafana.dc11a.prod.emodo.io
-  tls:
-    - secretName: grafana-tls
-      hosts:
-        - grafana.dc11a.prod.emodo.io 
