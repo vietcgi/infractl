@@ -4,8 +4,11 @@ kind: Kustomization
 # Reference the base Grafana configuration
 resources:
   - ../../../../base/grafana
-  - hostpath-patch.yaml
   - manual-storageclass.yaml
+
+# Patches for the Grafana deployment
+patches:
+  - path: deployment-patch.yaml
 
 # Common labels for all resources
 commonLabels:
@@ -26,18 +29,8 @@ commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   argocd.argoproj.io/sync-wave: "-1"
 
-# Patches
+# Patches for other resources
 patches:
-  # Patch the deployment to add node selector for dc11a
-  - target:
-      kind: Deployment
-      name: grafana
-    patch: |-
-      - op: add
-        path: /spec/template/spec/nodeSelector
-        value:
-          kubernetes.io/arch: amd64
-          kubernetes.io/os: linux
   # Patch the HPA to adjust scaling for dc11a
   - target:
       kind: HorizontalPodAutoscaler
@@ -49,12 +42,3 @@ patches:
       - op: replace
         path: /spec/maxReplicas
         value: 3
-
-  # Patch the PVC to use manual storage class
-  - target:
-      kind: PersistentVolumeClaim
-      name: grafana-storage
-    patch: |-
-      - op: replace
-        path: /spec/storageClassName
-        value: manual
